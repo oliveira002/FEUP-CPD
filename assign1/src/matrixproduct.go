@@ -5,55 +5,86 @@ import (
     "time"
 )
 
-func makeMatrix(n int) [][]int {
-    m := make([][]int, n)
-    for i := range m {
-        m[i] = make([]int, n)
-    }
-    return m
-}
-
-func OnMult(n int, x int) {
+func OnMult(n int) {
     start := time.Now()
 
-    var temp int
-    matrix1 := makeMatrix(n)
-    matrix2 := makeMatrix(n)
-    matrix3 := makeMatrix(n)
+    matrix1 := make([]int, n*n)
+    matrix2 := make([]int, n*n)
+    matrix3 := make([]int, n*n)
+    
 
     for i := 0; i < n; i++ {
         for j := 0; j < n; j++ {
-            matrix1[i][j] = 1
+            matrix1[i*n + j] = 1.0
+            matrix2[i*n + j] = (i + 1)
+            matrix3[i*n + j] = 0
         }
     }
 
     for i := 0; i < n; i++ {
         for j := 0; j < n; j++ {
-            matrix2[i][j] = (i + 1)
-        }
-    }
-
-    for j := 0; j < n; j++ {
-        for i := 0; i < n; i++ {
-            temp = 0
             for k := 0; k < n; k++ {
-                temp += matrix1[i][k] * matrix2[k][j]
+                matrix3[i*n +j] += matrix1[i*n + k] * matrix2[k*n + j]
             }
-            matrix3[i][j] = temp
         }
     }
 
-    //fmt.Println(matrix3[0])
+
+    for i := 0; i < 20; i++ {
+        fmt.Println(matrix3[i])
+    }
+    
+    elapsed := time.Since(start)
+    fmt.Printf("Binomial took %s\n", elapsed)
+}
+
+func OnMultLine(n int) {
+    start := time.Now()
+
+    matrix1 := make([]int, n*n)
+    matrix2 := make([]int, n*n)
+    matrix3 := make([]int, n*n)
+    
+
+    for i := 0; i < n; i++ {
+        for j := 0; j < n; j++ {
+            matrix1[i*n + j] = 1.0
+            matrix2[i*n + j] = (i + 1)
+            matrix3[i*n + j] = 0
+        }
+    }
+
+    for i := 0; i < n; i++ {
+        for k := 0; k < n; k++ {
+            for j := 0; j < n; j++ {
+                matrix3[i*n +j] += matrix1[i*n + k] * matrix2[k*n + j]
+            }
+        }
+    }
+
+
+    for i := 0; i < 20; i++ {
+        fmt.Println(matrix3[i])
+    }
+    
     elapsed := time.Since(start)
     fmt.Printf("Binomial took %s\n", elapsed)
 }
 
 func main() {
-    OnMult(600, 600);
-    OnMult(1000, 1000);
-    OnMult(1400, 1400);
-    OnMult(1800, 1800);
-    OnMult(2200, 2200);
-    OnMult(2600, 2600);
-    OnMult(3000, 3000);
+    fmt.Println("What option?")
+    fmt.Println("1 - Multiplication")
+    fmt.Println("2 - Line Multiplication")
+    fmt.Println("3 - Exit")
+    var option int
+    var sz int
+    fmt.Scanln(&option)
+    fmt.Println("Matrix Size:")
+    fmt.Scanln(&sz)
+    if option == 1 {
+        OnMult(sz)
+    }
+    if option == 2 {
+        OnMultLine(sz)
+    }
 }
