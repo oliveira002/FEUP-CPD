@@ -3,7 +3,7 @@
 #include <iomanip>
 #include <time.h>
 #include <cstdlib>
-#include <papi.h>
+//#include <papi.h>
 
 using namespace std;
 
@@ -98,15 +98,14 @@ void OnMultLine(int m_ar, int m_br)
 
     Time1 = clock();
 
-	//TODO
 	for(i=0; i<m_ar; i++)
-	{	for( j=0; j<m_br; j++)
-		{	temp = 0;
+	{	
+		for( j=0; j<m_br; j++)
+		{	
 			for( k=0; k<m_ar; k++)
 			{	
-				temp += pha[j*m_ar+k] * phb[k*m_br+i];
+				phc[i*m_ar+k] += pha[i*m_ar+j] * phb[j*m_ar+k];
 			}
-			phc[j*m_ar+i]=temp;
 		}
 	}
 
@@ -154,27 +153,26 @@ void OnMultBlock(int m_ar, int m_br, int bkSize)
 	Time1 = clock(); 
 
 
-
-	for (int j = 0; j < m_br; j += bkSize) { // cols
-
-		for (int k = 0; k < m_ar; k += bkSize) { // rows A cols B positions to multiply 
-
-			for (int ii = 0; ii < m_ar; ii++) {
-
-				for (int jj = j; jj < j + bkSize && jj < m_br; jj++) {
-
-					temp = 0;
-
-					for (int kk = k; kk < k + bkSize && kk < m_ar; kk++) {
-						temp += pha[ii * m_ar + kk] * phb[kk * m_br + jj];
+	for (int x = 0; x < m_ar; x += bkSize)
+  	{
+		for (int y = 0; y < m_ar; y += bkSize)
+		{
+			for (int z = 0; z < m_ar; z += bkSize)
+			{
+				for (int i = x; i < x + bkSize; i++)
+				{
+					for (int j = y; j < y + bkSize; j++)
+					{
+						for (int k = z; k < z + bkSize; k++)
+						{
+							phc[i * m_ar + k] += pha[i * m_ar + j] * phb[j * m_ar + k];
+						}
 					}
-
-					phc[ii * m_ar + jj] += temp;
 				}
 			}
 		}
-	}
-    
+  	}
+	
 
 	Time2 = clock(); 
 
@@ -194,7 +192,7 @@ void OnMultBlock(int m_ar, int m_br, int bkSize)
 }
 
 
-void handle_error (int retval)
+/*void handle_error (int retval)
 {
   printf("PAPI error %d: %s\n", retval, PAPI_strerror(retval));
   exit(1);
@@ -211,22 +209,22 @@ void init_papi() {
   std::cout << "PAPI Version Number: MAJOR: " << PAPI_VERSION_MAJOR(retval)
             << " MINOR: " << PAPI_VERSION_MINOR(retval)
             << " REVISION: " << PAPI_VERSION_REVISION(retval) << "\n";
-}
+}*/
 
 
 int main (int argc, char *argv[])
 {
 
 	char c;
-	int lin, col, blockSize;
+	int lin, col, bkSize;
 	int op;
 	
-	int EventSet = PAPI_NULL;
+	//int EventSet = PAPI_NULL;
   	long long values[2];
   	int ret;
 	
 
-	ret = PAPI_library_init( PAPI_VER_CURRENT );
+	/*ret = PAPI_library_init( PAPI_VER_CURRENT );
 	if ( ret != PAPI_VER_CURRENT )
 		std::cout << "FAIL" << endl;
 
@@ -240,7 +238,7 @@ int main (int argc, char *argv[])
 
 
 	ret = PAPI_add_event(EventSet,PAPI_L2_DCM);
-	if (ret != PAPI_OK) cout << "ERROR: PAPI_L2_DCM" << endl;
+	if (ret != PAPI_OK) cout << "ERROR: PAPI_L2_DCM" << endl;*/
 
 
 	op=1;
@@ -259,8 +257,8 @@ int main (int argc, char *argv[])
 
 
 		// Start counting
-		ret = PAPI_start(EventSet);
-		if (ret != PAPI_OK) cout << "ERROR: Start PAPI" << endl;
+		/*ret = PAPI_start(EventSet);
+		if (ret != PAPI_OK) cout << "ERROR: Start PAPI" << endl;*/
 
 		switch (op){
 			case 1: 
@@ -271,26 +269,26 @@ int main (int argc, char *argv[])
 				break;
 			case 3:
 				cout << "Block Size? ";
-				cin >> blockSize;
-				OnMultBlock(lin, col, blockSize);  
+				cin >> bkSize;
+				OnMultBlock(lin, col, bkSize);  
 				break;
 
 		}
 
-  		ret = PAPI_stop(EventSet, values);
+  		/*ret = PAPI_stop(EventSet, values);
   		if (ret != PAPI_OK) cout << "ERROR: Stop PAPI" << endl;
   		printf("L1 DCM: %lld \n",values[0]);
   		printf("L2 DCM: %lld \n",values[1]);
 
 		ret = PAPI_reset( EventSet );
 		if ( ret != PAPI_OK )
-			std::cout << "FAIL reset" << endl; 
+			std::cout << "FAIL reset" << endl;*/
 
 
 
 	}while (op != 0);
 
-	ret = PAPI_remove_event( EventSet, PAPI_L1_DCM );
+	/*ret = PAPI_remove_event( EventSet, PAPI_L1_DCM );
 	if ( ret != PAPI_OK )
 		std::cout << "FAIL remove event" << endl; 
 
@@ -300,6 +298,6 @@ int main (int argc, char *argv[])
 
 	ret = PAPI_destroy_eventset( &EventSet );
 	if ( ret != PAPI_OK )
-		std::cout << "FAIL destroy" << endl;
+		std::cout << "FAIL destroy" << endl;*/
 
 }

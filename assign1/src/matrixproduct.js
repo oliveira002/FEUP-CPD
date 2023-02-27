@@ -54,10 +54,8 @@ function OnMult(m_ar, m_br){
 
 }
 
-// add code here for line x line matriz multiplication
 function OnMultLine(m_ar, m_br){
 
-    let temp;
     let pha = new Array();
     let phb = new Array();
     let phc = new Array();
@@ -79,11 +77,9 @@ function OnMultLine(m_ar, m_br){
 
     for(let i = 0; i< m_ar; i++){
         for(let j = 0; j<m_br; j++){
-            temp = 0;
             for(let k = 0; k<m_ar; k++){
-                temp += pha[j*m_ar+k] * phb[k*m_br+i];
+                phc[i*m_ar+k] += pha[i*m_ar+j] * phb[j*m_ar+k];
             }
-            phc[j*m_ar+i]=temp;
         }
     }
 
@@ -93,7 +89,6 @@ function OnMultLine(m_ar, m_br){
     console.log(`Time: ${((end - start)*0.001).toFixed(3)} seconds\n`);
 
     document.getElementById(`lbl${m_ar}`).innerHTML = `${((end - start)*0.001).toFixed(3)}`;
-
 
     // display 10 elements of the result matrix to verify correctness
     console.log("Result matrix: \n");
@@ -111,31 +106,68 @@ function OnMultLine(m_ar, m_br){
 
 }
 
-function main(){
+function OnMultBlock(m_ar, m_br, bkSize){
 
-    let op = 1;
+    let pha = new Array();
+    let phb = new Array();
+    let phc = new Array();
 
-    do{
-        console.log("\n1. Multiplication\n");
-        console.log("2. Line Multiplication\n");
-        console.log("0. Exit\n");
-        op = prompt("Selection?: ");
-        if(op === 0){
-            break;
+
+    for(let i = 0; i< m_ar; i++){
+        for(let j = 0; j<m_ar; j++){
+            pha[i*m_ar + j] = 1;
         }
-        const lin = prompt("Dimensions: lins=cols ? ");
-        const col = lin;
+    }
 
-        switch(op){
-            case 1:
-                OnMult(lin, col);
-                break;
-            case 2:
-                OnMultLine(lin, col);
-                break;
+    for(let i = 0; i< m_br; i++){
+        for(let j = 0; j<m_br; j++){
+            phb[i*m_br + j] = i+1;
         }
+    }
 
-    } while(op != 0);
+    const start = Date.now();
+
+    for (let x = 0; x < m_ar; x += bkSize)
+  	{
+		for (let y = 0; y < m_ar; y += bkSize)
+		{
+			for (let z = 0; z < m_ar; z += bkSize)
+			{
+				for (let i = x; i < x + bkSize; i++)
+				{
+					for (let j = y; j < y + bkSize; j++)
+					{
+						for (let k = z; k < z + bkSize; k++)
+						{
+							phc[i*m_ar+k] += pha[i*m_ar+j] * phb[j*m_ar+k];
+						}
+					}
+				}
+			}
+		}
+    }
+
+    const end = Date.now();
+
+    console.log(`Matrix: ${m_ar}x${m_ar}`);
+    console.log(`Time: ${((end - start)*0.001).toFixed(3)} seconds\n`);
+
+    document.getElementById(`lbl${m_ar}`).innerHTML = `${((end - start)*0.001).toFixed(3)}`;
+
+    // display 10 elements of the result matrix to verify correctness
+    console.log("Result matrix: \n");
+    for(let i=0; i<1; i++){
+        for(let j=0; j<Math.min(10,m_br); j++){
+            console.log(`${phc[j]} `);
+        }
+    }
+    
+    console.log("\n");
+
+    pha = null;
+    phb = null;
+    phc = null;
+
 }
 
 document.getElementById("buttonSTD").addEventListener('click', function() {
@@ -156,4 +188,31 @@ document.getElementById("buttonLBL").addEventListener('click', function() {
     OnMultLine(2200, 2200);
     OnMultLine(2600, 2600);
     OnMultLine(3000, 3000);
+
+    OnMultLine(4096, 4096);
+    OnMultLine(6144, 6144);
+    OnMultLine(8192, 8192);
+    OnMultLine(10240, 10240);
+});
+
+document.getElementById("").addEventListener('click', function() {
+    OnMultBlock(4096, 4096, 128);
+    OnMultBlock(4096, 4096, 256);
+    OnMultBlock(4096, 4096, 512);
+    OnMultBlock(4096, 4096, 1024);
+
+    OnMultBlock(6144, 6144, 128);
+    OnMultBlock(6144, 6144, 256);
+    OnMultBlock(6144, 6144, 512);
+    OnMultBlock(6144, 6144, 1024);
+
+    OnMultBlock(8192, 8192, 128);
+    OnMultBlock(8192, 8192, 256);
+    OnMultBlock(8192, 8192, 512);
+    OnMultBlock(8192, 8192, 1024);
+
+    OnMultBlock(10240, 10240, 128);
+    OnMultBlock(10240, 10240, 256);
+    OnMultBlock(10240, 10240, 512);
+    OnMultBlock(10240, 10240, 1024);
 });
