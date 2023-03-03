@@ -227,7 +227,7 @@ void RunAll(){
 	lxw_workbook *workbook = workbook_new("unformated_data.xlsx");
 	lxw_worksheet *worksheet = workbook_add_worksheet(workbook, NULL);
 	
-	struct params paramsV[38] = {
+	struct params paramsV[34] = {
 		//OnMult
 		{600, 600}, 
 		{1000, 1000},
@@ -236,10 +236,6 @@ void RunAll(){
 		{2200, 2200},
 		{2600, 2600},
 		{3000, 3000},
-		{4096, 4096},
-		{6144, 6144},
-		{8192, 8192},
-		{10240, 10240},
 
 		//OnMultLine
 		{600, 600}, 
@@ -275,8 +271,8 @@ void RunAll(){
 
 	
 	int i = 0, col = 1;
-	for (int j = 0; j < 38; j++){
-		if(j == 11 || j == 22) i++;
+	for (int j = 0; j < 34; j++){
+		if(j == 7 || j == 18) i++;
 
 		// Start counting
 		ret = PAPI_start(EventSet);
