@@ -335,10 +335,6 @@ void RunAll(){
     if ( ret != PAPI_OK )
         std::cout << "FAIL remove event L2_DCH" << endl; 
 
-    ret = PAPI_remove_event( EventSet, PAPI_FP_OPS );
-    if ( ret != PAPI_OK )
-        std::cout << "FAIL remove event FP_OPS" << endl; 
-
     ret = PAPI_destroy_eventset( &EventSet );
     if ( ret != PAPI_OK )
         std::cout << "FAIL destroy" << endl;
@@ -433,23 +429,26 @@ int main(int argc, char *argv[])
 
 	} while (op != 0);
 
-    ret = PAPI_remove_event( EventSet, PAPI_L1_DCM );
-    if ( ret != PAPI_OK )
-        std::cout << "FAIL remove event L1_DCM" << endl; 
+	if(op != 4){
 
-    ret = PAPI_remove_event( EventSet, PAPI_L1_DCA );
-    if ( ret != PAPI_OK )
-        std::cout << "FAIL remove event L1_DCA" << endl; 
+		ret = PAPI_remove_event( EventSet, PAPI_L1_DCM );
+		if ( ret != PAPI_OK )
+			std::cout << "FAIL remove event L1_DCM" << endl; 
 
-    ret = PAPI_remove_event( EventSet, PAPI_L2_DCM );
-    if ( ret != PAPI_OK )
-        std::cout << "FAIL remove event L2_DCM" << endl; 
+		ret = PAPI_remove_event( EventSet, PAPI_L1_DCA );
+		if ( ret != PAPI_OK )
+			std::cout << "FAIL remove event L1_DCA" << endl; 
 
-    ret = PAPI_remove_event( EventSet, PAPI_L2_DCH );
-    if ( ret != PAPI_OK )
-        std::cout << "FAIL remove event L2_DCH" << endl; 
+		ret = PAPI_remove_event( EventSet, PAPI_L2_DCM );
+		if ( ret != PAPI_OK )
+			std::cout << "FAIL remove event L2_DCM" << endl; 
 
-    ret = PAPI_destroy_eventset( &EventSet );
-    if ( ret != PAPI_OK )
-        std::cout << "FAIL destroy" << endl;
+		ret = PAPI_remove_event( EventSet, PAPI_L2_DCH );
+		if ( ret != PAPI_OK )
+			std::cout << "FAIL remove event L2_DCH" << endl; 
+
+		ret = PAPI_destroy_eventset( &EventSet );
+		if ( ret != PAPI_OK )
+			std::cout << "FAIL destroy" << endl;
+	}
 }
