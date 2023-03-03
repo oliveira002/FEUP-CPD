@@ -10,6 +10,10 @@ using namespace std;
 
 #define SYSTEMTIME clock_t
 
+int EventSet = PAPI_NULL;
+long long values[4];
+int ret;
+
 double OnMult(int m_ar, int m_br)
 {
 
@@ -48,11 +52,12 @@ double OnMult(int m_ar, int m_br)
 	Time2 = clock();
 	double elapsed = (double)(Time2 - Time1) / CLOCKS_PER_SEC;
 
+	cout << "OnMult: " << m_ar << "x" << m_ar << endl;
 	sprintf(st, "Time: %3.3f seconds\n", elapsed);
 	cout << st;
 
 	// display 10 elements of the result matrix tto verify correctness
-	cout << "Result matrix: " << endl;
+	cout << "Result matrix: ";
 	for (i = 0; i < 1; i++)
 	{
 		for (j = 0; j < min(10, m_br); j++)
@@ -104,27 +109,27 @@ double OnMultLine(int m_ar, int m_br)
 	Time2 = clock();
 
 	double elapsed = (double)(Time2 - Time1) / CLOCKS_PER_SEC;
-
+	cout << "OnMultLine: " << m_ar << "x" << m_ar << endl;
 	sprintf(st, "Time: %3.3f seconds\n", elapsed);
 	cout << st;
 
 	// display 10 elements of the result matrix tto verify correctness
-	cout << "Result matrix: " << endl;
+	cout << "Result matrix: ";
 	for (i = 0; i < 1; i++)
 	{
 		for (j = 0; j < min(10, m_br); j++)
 			cout << phc[j] << " ";
 	}
-	cout << endl;
+	cout << endl; 
 
 	free(pha);
 	free(phb);
 	free(phc);
 
-	return elapsed
+	return elapsed;
 }
 
-double OnMultBlock(int m_ar, int m_br, int bkSize)
+double OnMultBlock(int m_ar, int bkSize)
 {
 	SYSTEMTIME Time1, Time2;
 
@@ -140,7 +145,7 @@ double OnMultBlock(int m_ar, int m_br, int bkSize)
 		for (j = 0; j < m_ar; j++)
 		{
 			pha[i * m_ar + j] = (double)1.0;
-			phb[i * m_br + j] = (double)(i + 1);
+			phb[i * m_ar + j] = (double)(i + 1);
 			phc[i * m_ar + j] = (double)0.0;
 		}
 
@@ -170,13 +175,14 @@ double OnMultBlock(int m_ar, int m_br, int bkSize)
 
 	double elapsed = (double)(Time2 - Time1) / CLOCKS_PER_SEC;
 
+	cout << "OnMultBlock: " << m_ar << "x" << m_ar << ", bkSize = " << bkSize << endl;
 	sprintf(st, "Time: %3.3f seconds\n", elapsed);
 	cout << st;
 
-	cout << "Result matrix: " << endl;
+	cout << "Result matrix: ";
 	for (int i = 0; i < 1; i++)
 	{
-		for (int j = 0; j < min(10, m_br); j++)
+		for (int j = 0; j < min(10, m_ar); j++)
 			cout << phc[j] << " ";
 	}
 	cout << endl;
@@ -207,14 +213,14 @@ void init_papi() {
 			<< " REVISION: " << PAPI_VERSION_REVISION(retval) << "\n";
 }
 
-typedef int (*f)(int, int); 
+typedef double (*f)(int, int); 
 
 f func[3] = { &OnMult, &OnMultLine, &OnMultBlock};
 
 struct params{
 	int p1;
 	int p2;
-}
+};
 
 void RunAll(){
 
@@ -246,7 +252,7 @@ void RunAll(){
 		{4096, 4096},
 		{6144, 6144},
 		{8192, 8192},
-		{10240, 10240},	
+		{10240, 10240},
 
 		//OnMultBlock
 		{4096,128},
@@ -265,15 +271,77 @@ void RunAll(){
 		{10240,256},
 		{10240,512},
 		{10240,1024}
-	}
+	};
 
-	for (int i = 0; i < 3; i++){
-		for (int j = 0; j < 38; j++){
-			worksheet_write_number(worksheet, 66, (i+1)*(j+1), func[i](params[j].p1, params[j].p2), NULL);
-		}	
-	}
+	
+	int i = 0, col = 1;
+	for (int j = 0; j < 38; j++){
+		if(j == 11 || j == 22) i++;
 
-	workbook_close(workbook)
+		// Start counting
+		ret = PAPI_start(EventSet);
+		if (ret != PAPI_OK) cout << "ERROR: Start PAPI" << endl;
+
+		double value = func[i](paramsV[j].p1, paramsV[j].p2);
+
+		ret = PAPI_stop(EventSet, values);
+		if (ret != PAPI_OK) cout << "ERROR: Stop PAPI" << endl;
+		printf("L1 DCM: %lld \n",values[0]);
+        printf("L1 DCA: %lld \n",values[1]);
+		printf("L2 DCM: %lld \n",values[2]);
+        printf("L2 DCH: %lld \n\n",values[3]);
+
+        ret = PAPI_reset( EventSet );
+        if ( ret != PAPI_OK ) cout << "FAIL reset" << endl;
+
+		worksheet_write_number(worksheet, j+1, 2, value, NULL);
+
+		worksheet_write_string(worksheet, col, 3, "L1 DCM", NULL);
+		worksheet_write_number(worksheet, col, 4, values[0], NULL);
+		col++;
+
+		worksheet_write_string(worksheet, col, 3, "L1 DCA", NULL);
+		worksheet_write_number(worksheet, col, 4, values[1], NULL);
+		col++;
+
+		worksheet_write_string(worksheet, col, 3, "L2 DCM", NULL);
+		worksheet_write_number(worksheet, col, 4, values[2], NULL);
+		col++;
+
+		worksheet_write_string(worksheet, col, 3, "L2 DCH", NULL);
+		worksheet_write_number(worksheet, col, 4, values[3], NULL);
+		col++;
+
+		worksheet_write_string(worksheet, col, 3, "", NULL);
+		worksheet_write_string(worksheet, col, 4, "", NULL);
+		col++;
+	}	
+
+	workbook_close(workbook);
+
+	ret = PAPI_remove_event( EventSet, PAPI_L1_DCM );
+    if ( ret != PAPI_OK )
+        std::cout << "FAIL remove event L1_DCM" << endl; 
+
+    ret = PAPI_remove_event( EventSet, PAPI_L1_DCA );
+    if ( ret != PAPI_OK )
+        std::cout << "FAIL remove event L1_DCA" << endl; 
+
+    ret = PAPI_remove_event( EventSet, PAPI_L2_DCM );
+    if ( ret != PAPI_OK )
+        std::cout << "FAIL remove event L2_DCM" << endl; 
+
+    ret = PAPI_remove_event( EventSet, PAPI_L2_DCH );
+    if ( ret != PAPI_OK )
+        std::cout << "FAIL remove event L2_DCH" << endl; 
+
+    ret = PAPI_remove_event( EventSet, PAPI_FP_OPS );
+    if ( ret != PAPI_OK )
+        std::cout << "FAIL remove event FP_OPS" << endl; 
+
+    ret = PAPI_destroy_eventset( &EventSet );
+    if ( ret != PAPI_OK )
+        std::cout << "FAIL destroy" << endl;
 }
 
 int main(int argc, char *argv[])
@@ -283,14 +351,10 @@ int main(int argc, char *argv[])
 	int lin, col, bkSize;
 	int op;
 
-	int EventSet = PAPI_NULL;
-	long long values[5];
-	int ret;
 
 	ret = PAPI_library_init( PAPI_VER_CURRENT );
 	if ( ret != PAPI_VER_CURRENT )
 		std::cout << "FAIL" << endl;
-
 
 	ret = PAPI_create_eventset(&EventSet);
 	if (ret != PAPI_OK) cout << "ERROR: create eventset" << endl;
@@ -307,13 +371,10 @@ int main(int argc, char *argv[])
     ret = PAPI_add_event(EventSet,PAPI_L2_DCH);
     if (ret != PAPI_OK) cout << "ERROR: PAPI_L2_DCH" << endl;
 
-    ret = PAPI_add_event(EventSet,PAPI_FP_OPS);
-    if (ret != PAPI_OK) cout << "ERROR: PAPI_FP_OPS" << endl;
-
 	op = 1;
 	do
 	{
-		cout << endl
+		cout << endl;
 		cout << "1. Multiplication" << endl;
 		cout << "2. Line Multiplication" << endl;
 		cout << "3. Block Multiplication" << endl;
@@ -323,31 +384,42 @@ int main(int argc, char *argv[])
 		cin >> op;
 		if (op == 0)
 			break;
-		printf("Dimensions: lins=cols ? ");
-		cin >> lin;
-		col = lin;
 
-		// Start counting
-		ret = PAPI_start(EventSet);
-		if (ret != PAPI_OK) cout << "ERROR: Start PAPI" << endl;
+		if(op != 4){
+			// Start counting
+			ret = PAPI_start(EventSet);
+			if (ret != PAPI_OK) cout << "ERROR: Start PAPI" << endl;
+		}
 
 		switch (op)
 		{
 		case 1:
+			printf("Dimensions: lins=cols ? ");
+			cin >> lin;
+			col = lin;
 			OnMult(lin, col);
 			break;
 		case 2:
+			printf("Dimensions: lins=cols ? ");
+			cin >> lin;
+			col = lin;
 			OnMultLine(lin, col);
 			break;
 		case 3:
+			printf("Dimensions: lins=cols ? ");
+			cin >> lin;
+			col = lin;
 			cout << "Block Size? ";
 			cin >> bkSize;
-			OnMultBlock(lin, col, bkSize);
+			OnMultBlock(lin, bkSize);
 			break;
 		case 4:
 			RunAll();
 			break;
 		}
+
+		if (op == 4)
+			break;
 
 		ret = PAPI_stop(EventSet, values);
 		if (ret != PAPI_OK) cout << "ERROR: Stop PAPI" << endl;
@@ -355,7 +427,6 @@ int main(int argc, char *argv[])
         printf("L1 DCA: %lld \n",values[1]);
 		printf("L2 DCM: %lld \n",values[2]);
         printf("L2 DCH: %lld \n",values[3]);
-        printf("FLOPS: %lld \n",values[4]);
 
         ret = PAPI_reset( EventSet );
         if ( ret != PAPI_OK ) cout << "FAIL reset" << endl;
@@ -364,23 +435,19 @@ int main(int argc, char *argv[])
 
     ret = PAPI_remove_event( EventSet, PAPI_L1_DCM );
     if ( ret != PAPI_OK )
-        std::cout << "FAIL remove event" << endl; 
+        std::cout << "FAIL remove event L1_DCM" << endl; 
 
     ret = PAPI_remove_event( EventSet, PAPI_L1_DCA );
     if ( ret != PAPI_OK )
-        std::cout << "FAIL remove event" << endl; 
+        std::cout << "FAIL remove event L1_DCA" << endl; 
 
     ret = PAPI_remove_event( EventSet, PAPI_L2_DCM );
     if ( ret != PAPI_OK )
-        std::cout << "FAIL remove event" << endl; 
+        std::cout << "FAIL remove event L2_DCM" << endl; 
 
     ret = PAPI_remove_event( EventSet, PAPI_L2_DCH );
     if ( ret != PAPI_OK )
-        std::cout << "FAIL remove event" << endl; 
-
-    ret = PAPI_remove_event( EventSet, PAPI_FP_OPS );
-    if ( ret != PAPI_OK )
-        std::cout << "FAIL remove event" << endl; 
+        std::cout << "FAIL remove event L2_DCH" << endl; 
 
     ret = PAPI_destroy_eventset( &EventSet );
     if ( ret != PAPI_OK )
