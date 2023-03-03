@@ -5,6 +5,13 @@ import (
     "time"
 )
 
+func min(a, b int) int {
+    if a < b {
+        return a
+    }
+    return b
+}
+
 func OnMult(n int) {
 
     matrix1 := make([]int, n*n)
@@ -31,10 +38,13 @@ func OnMult(n int) {
     }
 
     elapsed := time.Since(start)
-    fmt.Printf("Binomial took %s\n", elapsed)
+    fmt.Printf("Time: %s\n", elapsed)
 
-    for i := 0; i < 20; i++ {
-        fmt.Println(matrix3[i])
+    fmt.Printf("Result matrix: ")
+    for j:= 0; j < n; j++{
+        for i := 0; i < min(10, n); i++ {
+            fmt.Println(matrix3[i])
+        }
     }
 }
 
@@ -66,8 +76,11 @@ func OnMultLine(n int) {
     elapsed := time.Since(start)
     fmt.Printf("Time: %s\n", elapsed)
 
-    for i := 0; i < 20; i++ {
-        fmt.Println(matrix3[i])
+    fmt.Printf("Result matrix: ")
+    for j:= 0; j < n; j++{
+        for i := 0; i < min(10, n); i++ {
+            fmt.Println(matrix3[i])
+        }
     }
 }
 
@@ -104,18 +117,24 @@ func OnMultBlock(n int, bkSize int){
     
     elapsed := time.Since(start)
     fmt.Printf("Time: %s\n", elapsed)
-
-    for i := 0; i < 20; i++ {
-        fmt.Println(matrix3[i])
+    fmt.Printf("Result matrix: ")
+    for j:= 0; j < n; j++{
+        for i := 0; i < min(10, n); i++ {
+            fmt.Println(matrix3[i])
+        }
     }
 
 }
 
+func RunAll(){
+    
+}
 
 func main() {
     fmt.Println("1. Multiplication")
     fmt.Println("2. Line Multiplication")    
     fmt.Println("3. Block Multiplication")
+    fmt.Println("4. Extract Data")
     fmt.Println("0. Exit")
     var option int
     var sz int
@@ -134,5 +153,8 @@ func main() {
         fmt.Println("Block Size?: ")
         fmt.Scanln(&bkSize)
         OnMultBlock(sz, bkSize)
+    }
+    if option == 4 {
+        RunAll();
     }
 }
