@@ -204,7 +204,7 @@ func RunAll(){
         OnMultBlock,
     }
 
-    cells1 := [34]string{
+    /*cells1 := [34]string{
         "X7",
         "X10",
         "X13",
@@ -239,7 +239,7 @@ func RunAll(){
         "AM46",
         "AM49",
         "AM52",
-    }
+    }*/
 
     /*cells2 := [34]string{
         "X8",
@@ -278,7 +278,7 @@ func RunAll(){
         "AM53",
     }*/
 
-    /*cells3 := [34]string{
+    cells3 := [34]string{
         "X9",
         "X12",
         "X15",
@@ -313,12 +313,12 @@ func RunAll(){
         "AM48",
         "AM51",
         "AM54",
-    }*/
+    }
 
 	for j := 0; j < 34; j++{
 		if j == 7 || j == 18 { i++ }
         
-        f.SetCellValue("Folha1", cells1[j], funcs[i](paramsV[j].p1, paramsV[j].p2).Seconds())
+        f.SetCellValue("Folha1", cells3[j], funcs[i](paramsV[j].p1, paramsV[j].p2).Seconds())
 
 	}	
 

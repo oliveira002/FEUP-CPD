@@ -123,7 +123,7 @@ function OnMultBlock(m_ar, m_br, bkSize) {
 
     const end = Date.now();
     const elapsed = (end - start) * 0.001
-    console.log(`OnMultBlock: ${m_ar}x${m_ar}`);
+    console.log(`OnMultBlock: ${m_ar}x${m_ar}, bkSize = ${bkSize}`);
     console.log(`Time: ${elapsed.toFixed(3)} seconds`);
 
     // display 10 elements of the result matrix to verify correctness
