@@ -14,7 +14,7 @@ func min(a, b int) int {
     return b
 }
 
-func OnMult(n int) time.Duration{
+func OnMult(n int, n2 int) time.Duration{
 
     matrix1 := make([]int, n*n)
     matrix2 := make([]int, n*n)
@@ -40,6 +40,7 @@ func OnMult(n int) time.Duration{
     }
 
     elapsed := time.Since(start)
+    fmt.Printf("OnMult: %dx%d\n", n,n)
     fmt.Printf("Time: %.3f seconds\n", elapsed.Seconds())
 
     fmt.Printf("Result matrix: ")
@@ -48,11 +49,11 @@ func OnMult(n int) time.Duration{
             fmt.Printf("%d ",matrix3[i])
         }
     }
-
+    fmt.Printf("\n\n")
     return elapsed
 }
 
-func OnMultLine(n int) time.Duration {
+func OnMultLine(n int, n2 int) time.Duration {
 
     matrix1 := make([]int, n*n)
     matrix2 := make([]int, n*n)
@@ -78,6 +79,7 @@ func OnMultLine(n int) time.Duration {
     }
     
     elapsed := time.Since(start)
+    fmt.Printf("OnMultLine: %dx%d\n", n,n)
     fmt.Printf("Time: %.3f seconds\n", elapsed.Seconds())
 
     fmt.Printf("Result matrix: ")
@@ -86,7 +88,7 @@ func OnMultLine(n int) time.Duration {
             fmt.Printf("%d ",matrix3[i])
         }
     }
-
+    fmt.Printf("\n\n")
     return elapsed
 }
 
@@ -122,6 +124,7 @@ func OnMultBlock(n int, bkSize int) time.Duration{
     }
     
     elapsed := time.Since(start)
+    fmt.Printf("OnMultBlock: %dx%d, bkSize = %d\n", n,n, bkSize)
     fmt.Printf("Time: %.3f seconds\n", elapsed.Seconds())
     fmt.Printf("Result matrix: ")
     for j:= 0; j < 1; j++{
@@ -129,11 +132,12 @@ func OnMultBlock(n int, bkSize int) time.Duration{
             fmt.Printf("%d ",matrix3[i])
         }
     }
+    fmt.Printf("\n\n")
     return elapsed
 }
 
 func RunAll(){
-    f, err := excelize.OpenFile("doc/data/all_data.xlsx")
+    f, err := excelize.OpenFile("../doc/data/all_data.xlsx")
     if err != nil {
         fmt.Println(err)
         return
@@ -151,9 +155,8 @@ func RunAll(){
     }
 
     var i int = 0
-    var col int  = 0
 
-    paramsV [34]params = {
+    var paramsV []params = []params{
         //OnMult
 		params{600, 600}, 
 		params{1000, 1000},
@@ -192,13 +195,13 @@ func RunAll(){
 		params{10240,128},
 		params{10240,256},
 		params{10240,512},
-		params{10240,1024}
+		params{10240,1024},
     }
 
-    funcs := [3]func(){
+    funcs := [3]func(int, int) time.Duration{
         OnMult,
         OnMultLine,
-        OnMultBlock
+        OnMultBlock,
     }
 
     cells1 := [34]string{
@@ -208,7 +211,7 @@ func RunAll(){
         "X16",
         "X19",
         "X22",
-        "X25",,
+        "X25",
         "AE7",
         "AE10",
         "AE13",
@@ -238,7 +241,7 @@ func RunAll(){
         "AM52",
     }
 
-    cells2 := [34]string{
+    /*cells2 := [34]string{
         "X8",
         "X11",
         "X14",
@@ -273,9 +276,9 @@ func RunAll(){
         "AM46",
         "AM49",
         "AM53",
-    }
+    }*/
 
-    cells3 := [34]string{
+    /*cells3 := [34]string{
         "X9",
         "X12",
         "X15",
@@ -283,7 +286,7 @@ func RunAll(){
         "X21",
         "X24",
         "X27",
-        "AE9",,
+        "AE9",
         "AE12",
         "AE15",
         "AE18",
@@ -310,14 +313,20 @@ func RunAll(){
         "AM48",
         "AM51",
         "AM54",
-    }
+    }*/
 
 	for j := 0; j < 34; j++{
 		if j == 7 || j == 18 { i++ }
         
-        if i == 0:
-            f.SetCellValue("Sheet1", cells1[j], funcs[i](paramsV[j].p1, paramsV[j].p2).Seconds())
+        f.SetCellValue("Folha1", cells1[j], funcs[i](paramsV[j].p1, paramsV[j].p2).Seconds())
+
 	}	
+
+    // Save spreadsheet by the given path.
+    if err := f.SaveAs("../doc/data/all_data.xlsx"); err != nil {
+        fmt.Println(err)
+    }
+
 }
 
 func main() {
@@ -335,12 +344,12 @@ func main() {
     if option == 1 {
         fmt.Println("Dimensions: lins=cols ? ")
         fmt.Scanln(&sz)
-        OnMult(sz)
+        OnMult(sz, sz)
     }
     if option == 2 {
         fmt.Println("Dimensions: lins=cols ? ")
         fmt.Scanln(&sz)
-        OnMultLine(sz)
+        OnMultLine(sz, sz)
     }
     if option == 3 {
         fmt.Println("Dimensions: lins=cols ? ")
