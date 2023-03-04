@@ -14,7 +14,7 @@ Before we compile the C++ code, we need to install two libraries, whose installa
     - xlsxwriter: http://libxlsxwriter.github.io/getting_started.html
 
 Now, we need to find the required arguments and paths for the xlsxwriter lib linking. This can be achieved with the command: pkg-config --cflags --libs xlsxwriter
-After that, go to the folder where the C++ file is located and compile it with the following command, appending at the end the result of the previous command (i.e.): g++ -O2 file.cpp -o fileout -lpapi -I/usr/local/include -L/usr/local/lib -lxlsxwriter -lz
+After that, go to the folder where the C++ file is located and compile it with the following command, appending at the end the result of the previous command (i.e.): g++ -O2 matrixproduct.cpp -o matrixproduct -lpapi -I/usr/local/include -L/usr/local/lib -lxlsxwriter -lz
 
 ### GoLang code
 

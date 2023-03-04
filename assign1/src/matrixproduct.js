@@ -72,7 +72,7 @@ function OnMultLine(m_ar, m_br) {
     const end = Date.now();
     const elapsed = (end - start) * 0.001
     console.log(`OnMultLine: ${m_ar}x${m_ar}`);
-    console.log(`Time: ${elaspes.toFixed(3)} seconds`);
+    console.log(`Time: ${elapsed.toFixed(3)} seconds`);
 
     // display 10 elements of the result matrix to verify correctness
     process.stdout.write("Result matrix: ");
