@@ -315,7 +315,7 @@ func RunAll(){
         "AM54",
     }*/
 
-	for j := 0; j < 34; j++{
+	for j := 0; j < 3; j++{
 		if j == 7 || j == 18 { i++ }
         
         f.SetCellValue("Folha1", cells1[j], funcs[i](paramsV[j].p1, paramsV[j].p2).Seconds())
