@@ -24,16 +24,15 @@ function OnMult(m_ar, m_br) {
     }
 
     const end = Date.now();
-
-    console.log(`Algorithm: Default`);
-    console.log(`Matrix: ${m_ar}x${m_ar}`);
-    console.log(`Time: ${((end - start) * 0.001).toFixed(3)} seconds\n`);
+    const elapsed = (end - start) * 0.001
+    console.log(`OnMult: ${m_ar}x${m_ar}`);
+    console.log(`Time: ${elapsed.toFixed(3)} seconds`);
 
     // display 10 elements of the result matrix to verify correctness
-    console.log("Result matrix: \n");
+    process.stdout.write("Result matrix: ");
     for (let i = 0; i < 1; i++) {
         for (let j = 0; j < Math.min(10, m_br); j++) {
-            console.log(`${phc[j]} `);
+            process.stdout.write(`${phc[j]} `);
         }
     }
 
@@ -42,7 +41,7 @@ function OnMult(m_ar, m_br) {
     pha = null;
     phb = null;
     phc = null;
-
+    return elapsed
 }
 
 function OnMultLine(m_ar, m_br) {
@@ -71,16 +70,15 @@ function OnMultLine(m_ar, m_br) {
     }
 
     const end = Date.now();
-
-    console.log(`Algorithm: Line`);
-    console.log(`Matrix: ${m_ar}x${m_ar}`);
-    console.log(`Time: ${((end - start) * 0.001).toFixed(3)} seconds\n`);
+    const elapsed = (end - start) * 0.001
+    console.log(`OnMultLine: ${m_ar}x${m_ar}`);
+    console.log(`Time: ${elaspes.toFixed(3)} seconds`);
 
     // display 10 elements of the result matrix to verify correctness
-    console.log("Result matrix: \n");
+    process.stdout.write("Result matrix: ");
     for (let i = 0; i < 1; i++) {
         for (let j = 0; j < Math.min(10, m_br); j++) {
-            console.log(`${phc[j]} `);
+            process.stdout.write(`${phc[j]} `);
         }
     }
 
@@ -89,7 +87,7 @@ function OnMultLine(m_ar, m_br) {
     pha = null;
     phb = null;
     phc = null;
-
+    return elapsed
 }
 
 function OnMultBlock(m_ar, m_br, bkSize) {
@@ -124,16 +122,15 @@ function OnMultBlock(m_ar, m_br, bkSize) {
     }
 
     const end = Date.now();
-
-    console.log(`Algorithm: Block`);
-    console.log(`Matrix: ${m_ar}x${m_ar}`);
-    console.log(`Time: ${((end - start) * 0.001).toFixed(3)} seconds\n`);
+    const elapsed = (end - start) * 0.001
+    console.log(`OnMultBlock: ${m_ar}x${m_ar}`);
+    console.log(`Time: ${elapsed.toFixed(3)} seconds`);
 
     // display 10 elements of the result matrix to verify correctness
-    console.log("Result matrix: \n");
+    process.stdout.write("Result matrix: ");
     for (let i = 0; i < 1; i++) {
         for (let j = 0; j < Math.min(10, m_br); j++) {
-            console.log(`${phc[j]} `);
+            process.stdout.write(`${phc[j]} `);
         }
     }
 
@@ -142,56 +139,61 @@ function OnMultBlock(m_ar, m_br, bkSize) {
     pha = null;
     phb = null;
     phc = null;
-
+    return elapsed
 }
 
 function RunAll(){
 
-    OnMult(600, 600);
-    OnMult(1000, 1000);
-    OnMult(1400, 1400);
-    OnMult(1800, 1800);
-    OnMult(2200, 2200);
-    OnMult(2600, 2600);
-    OnMult(3000, 3000);
-    OnMult(4096, 4096);
-    OnMult(6144, 6144);
-    OnMult(8192, 8192);
-    OnMult(10240, 10240);
+    const fs = require('fs');
 
-    OnMultLine(600, 600);
-    OnMultLine(1000, 1000);
-    OnMultLine(1400, 1400);
-    OnMultLine(1800, 1800);
-    OnMultLine(2200, 2200);
-    OnMultLine(2600, 2600);
-    OnMultLine(3000, 3000);
-    OnMultLine(4096, 4096);
-    OnMultLine(6144, 6144);
-    OnMultLine(8192, 8192);
-    OnMultLine(10240, 10240);
+    let content = "";
+
+    content += OnMult(600, 600) + "\n";
+    content += OnMult(1000, 1000) + "\n";
+    content += OnMult(1400, 1400) + "\n";
+    content += OnMult(1800, 1800) + "\n";
+    content += OnMult(2200, 2200) + "\n";
+    content += OnMult(2600, 2600) + "\n";
+    content += OnMult(3000, 3000) + "\n";
+
+    content += OnMultLine(600, 600) + "\n";
+    content += OnMultLine(1000, 1000) + "\n";
+    content += OnMultLine(1400, 1400) + "\n";
+    content += OnMultLine(1800, 1800) + "\n";
+    content += OnMultLine(2200, 2200) + "\n";
+    content += OnMultLine(2600, 2600) + "\n";
+    content += OnMultLine(3000, 3000) + "\n";
+    content += OnMultLine(4096, 4096) + "\n";
+    content += OnMultLine(6144, 6144) + "\n";
+    content += OnMultLine(8192, 8192) + "\n";
+    content += OnMultLine(10240, 10240) + "\n";
 
 
-    OnMultBlock(4096, 4096, 128);
-    OnMultBlock(4096, 4096, 256);
-    OnMultBlock(4096, 4096, 512);
-    OnMultBlock(4096, 4096, 1024);
+    content += OnMultBlock(4096, 4096, 128) + "\n";
+    content += OnMultBlock(4096, 4096, 256) + "\n";
+    content += OnMultBlock(4096, 4096, 512) + "\n";
+    content += OnMultBlock(4096, 4096, 1024) + "\n";
 
-    OnMultBlock(6144, 6144, 128);
-    OnMultBlock(6144, 6144, 256);
-    OnMultBlock(6144, 6144, 512);
-    OnMultBlock(6144, 6144, 1024);
+    content += OnMultBlock(6144, 6144, 128) + "\n";
+    content += OnMultBlock(6144, 6144, 256) + "\n";
+    content += OnMultBlock(6144, 6144, 512) + "\n";
+    content += OnMultBlock(6144, 6144, 1024) + "\n";
 
-    OnMultBlock(8192, 8192, 128);
-    OnMultBlock(8192, 8192, 256);
-    OnMultBlock(8192, 8192, 512);
-    OnMultBlock(8192, 8192, 1024);
+    content += OnMultBlock(8192, 8192, 128) + "\n";
+    content += OnMultBlock(8192, 8192, 256) + "\n";
+    content += OnMultBlock(8192, 8192, 512) + "\n";
+    content += OnMultBlock(8192, 8192, 1024) + "\n";
 
-    OnMultBlock(10240, 10240, 128);
-    OnMultBlock(10240, 10240, 256);
-    OnMultBlock(10240, 10240, 512);
-    OnMultBlock(10240, 10240, 1024);
+    content += OnMultBlock(10240, 10240, 128) + "\n";
+    content += OnMultBlock(10240, 10240, 256) + "\n";
+    content += OnMultBlock(10240, 10240, 512) + "\n";
+    content += OnMultBlock(10240, 10240, 1024) + "\n";
 
+    fs.appendFile('../doc/data/JS/js_data.txt', content, err => {
+        if (err) {
+            console.error(err);
+        }
+    });
 
 }
 
