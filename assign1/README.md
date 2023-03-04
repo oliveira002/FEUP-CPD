@@ -2,7 +2,33 @@
 
 CPD Project 1 of group T04G13.
 
-Group members:
+## Instalation instructions
+
+### C++ Code
+
+To compile the C++ code we need a compiler like g++. It usually comes by default in Unix systems. To check this, type: g++ --version
+If it not installed yet, install it.
+
+Before we compile the C++ code, we need to install two libraries, whose installation guide can be found at:
+    - Papi: https://moodle.up.pt/mod/page/view.php?id=115178
+    - xlsxwriter: http://libxlsxwriter.github.io/getting_started.html
+
+Now, we need to find the required arguments and paths for the xlsxwriter lib linking. This can be achieved with the command: pkg-config --cflags --libs xlsxwriter
+After that, go to the folder where the C++ file is located and compile it with the following command, appending at the end the result of the previous command (i.e.): g++ -O2 file.cpp -o fileout -lpapi -I/usr/local/include -L/usr/local/lib -lxlsxwriter -lz
+
+### GoLang code
+
+First, we need to install the golang compiler. To do so, follow the following tutorial: https://go.dev/doc/install
+Then, set the GO111MODULE variable to off with: go env -w GO111MODULE=off 
+Now, we can install the required excelize library with: go get github.com/xuri/excelize
+Finally, we can compile and run the code using: go run [path to code]
+
+### JavaScript code
+
+To successfully run this JavaScript code, we'll need to have the node.js console, so that we can run JS code without a browser, which would cause unexpected issues.
+To install node.js we'll follow this guide **up until** "Install Node.js using NodeSouce repository": https://www.geeksforgeeks.org/installation-of-node-js-on-linux/
+
+## Group members:
 
 1. Diogo Babo (up202004950@up.pt)
 2. Gustavo Costa (up202004187@up.pt)
