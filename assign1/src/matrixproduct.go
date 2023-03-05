@@ -113,9 +113,9 @@ func OnMultBlock(n int, bkSize int) time.Duration{
 		for y := 0; y < n; y += bkSize {
 			for z := 0; z < n; z += bkSize {
 				for i := x; i < x + bkSize; i++ {
-					for j := y; j < y + bkSize; j++ {
-						for k := z; k < z + bkSize; k++ {
-							matrix3[i*n+k] += matrix1[i*n+j] * matrix2[j*n+k];
+					for k := y; k < y + bkSize; k++ {
+						for j := z; j < z + bkSize; j++ {
+							matrix3[i*n+j] += matrix1[i*n+k] * matrix2[k*n+j];
 						}
 					}
 				}

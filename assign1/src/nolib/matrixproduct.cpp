@@ -8,7 +8,6 @@ using namespace std;
 
 #define SYSTEMTIME clock_t
 
-
 double OnMult(int m_ar, int m_br)
 {
 
@@ -115,7 +114,7 @@ double OnMultLine(int m_ar, int m_br)
 		for (j = 0; j < min(10, m_br); j++)
 			cout << phc[j] << " ";
 	}
-	cout << endl; 
+	cout << endl;
 
 	free(pha);
 	free(phb);
@@ -154,11 +153,11 @@ double OnMultBlock(int m_ar, int bkSize)
 			{
 				for (int i = x; i < x + bkSize; i++)
 				{
-					for (int j = y; j < y + bkSize; j++)
+					for (int k = y; k < y + bkSize; k++)
 					{
-						for (int k = z; k < z + bkSize; k++)
+						for (int j = z; j < z + bkSize; j++)
 						{
-							phc[i * m_ar + k] += pha[i * m_ar + j] * phb[j * m_ar + k];
+							phc[i * m_ar + j] += pha[i * m_ar + k] * phb[k * m_ar + j];
 						}
 					}
 				}
@@ -189,20 +188,22 @@ double OnMultBlock(int m_ar, int bkSize)
 	return elapsed;
 }
 
-typedef double (*f)(int, int); 
+typedef double (*f)(int, int);
 
-f func[3] = { &OnMult, &OnMultLine, &OnMultBlock};
+f func[3] = {&OnMult, &OnMultLine, &OnMultBlock};
 
-struct params{
+struct params
+{
 	int p1;
 	int p2;
 };
 
-void RunAll(){
-	
+void RunAll()
+{
+
 	struct params paramsV[34] = {
-		//OnMult
-		{600, 600}, 
+		// OnMult
+		{600, 600},
 		{1000, 1000},
 		{1400, 1400},
 		{1800, 1800},
@@ -210,8 +211,8 @@ void RunAll(){
 		{2600, 2600},
 		{3000, 3000},
 
-		//OnMultLine
-		{600, 600}, 
+		// OnMultLine
+		{600, 600},
 		{1000, 1000},
 		{1400, 1400},
 		{1800, 1800},
@@ -223,33 +224,32 @@ void RunAll(){
 		{8192, 8192},
 		{10240, 10240},
 
-		//OnMultBlock
-		{4096,128},
-		{4096,256},
-		{4096,512},
-		{4096,1024},
-		{6144,128},
-		{6144,256},
-		{6144,512},
-		{6144,1024},
-		{8192,128},
-		{8192,256},
-		{8192,512},
-		{8192,1024},
-		{10240,128},
-		{10240,256},
-		{10240,512},
-		{10240,1024}
-	};
+		// OnMultBlock
+		{4096, 128},
+		{4096, 256},
+		{4096, 512},
+		{4096, 1024},
+		{6144, 128},
+		{6144, 256},
+		{6144, 512},
+		{6144, 1024},
+		{8192, 128},
+		{8192, 256},
+		{8192, 512},
+		{8192, 1024},
+		{10240, 128},
+		{10240, 256},
+		{10240, 512},
+		{10240, 1024}};
 
-	
 	int i = 0, col = 1;
-	for (int j = 0; j < 34; j++){
-		if(j == 7 || j == 18) i++;
+	for (int j = 0; j < 34; j++)
+	{
+		if (j == 7 || j == 18)
+			i++;
 
 		double value = func[i](paramsV[j].p1, paramsV[j].p2);
-
-	}	
+	}
 }
 
 int main(int argc, char *argv[])

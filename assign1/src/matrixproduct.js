@@ -111,9 +111,9 @@ function OnMultBlock(m_ar, m_br, bkSize) {
         for (let y = 0; y < m_ar; y += bkSize) {
             for (let z = 0; z < m_ar; z += bkSize) {
                 for (let i = x; i < x + bkSize; i++) {
-                    for (let j = y; j < y + bkSize; j++) {
-                        for (let k = z; k < z + bkSize; k++) {
-                            phc[i * m_ar + k] += pha[i * m_ar + j] * phb[j * m_ar + k];
+                    for (let k = y; k < y + bkSize; k++) {
+                        for (let j = z; j < z + bkSize; j++) {
+                            phc[i * m_ar + j] += pha[i * m_ar + k] * phb[k * m_ar + j];
                         }
                     }
                 }
@@ -142,7 +142,7 @@ function OnMultBlock(m_ar, m_br, bkSize) {
     return elapsed
 }
 
-function RunAll(){
+function RunAll() {
 
     const fs = require('fs');
 
@@ -197,15 +197,14 @@ function RunAll(){
 
 }
 
-function main()
-{   
-    if(process.argv.length < 3)
+function main() {
+    if (process.argv.length < 3)
         console.error("ERROR: Unspecified algorithm");
 
-    switch(process.argv[2]){
+    switch (process.argv[2]) {
         //Default
         case "Default":
-            if(Number(process.argv[3]) < 1 || isNaN(process.argv[3])){
+            if (Number(process.argv[3]) < 1 || isNaN(process.argv[3])) {
                 console.error("ERROR: Invalid Matrix Size");
             }
             lin = Number(process.argv[3])
@@ -214,7 +213,7 @@ function main()
             break;
         //Line By Line
         case "Line":
-            if(Number(process.argv[3]) < 1 || isNaN(process.argv[3])){
+            if (Number(process.argv[3]) < 1 || isNaN(process.argv[3])) {
                 console.error("ERROR: Invalid Matrix Size");
             }
             lin = Number(process.argv[3])
@@ -223,13 +222,13 @@ function main()
             break;
         //Block
         case "Block":
-            if(Number(process.argv[3]) < 1 || isNaN(process.argv[3])){
+            if (Number(process.argv[3]) < 1 || isNaN(process.argv[3])) {
                 console.error("ERROR: Invalid Matrix Size");
             }
             lin = Number(process.argv[3])
             col = lin
 
-            if(Number(process.argv[4]) < 1 || isNaN(process.argv[4])){
+            if (Number(process.argv[4]) < 1 || isNaN(process.argv[4])) {
                 console.error("ERROR: Invalid Block Size");
             }
             bkSize = Number(process.argv[4])
@@ -243,6 +242,6 @@ function main()
             console.error("ERROR: Invalid algorithm");
             break;
     }
-    
-	
+
+
 }; main();

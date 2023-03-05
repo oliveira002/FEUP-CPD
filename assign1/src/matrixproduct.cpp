@@ -120,7 +120,7 @@ double OnMultLine(int m_ar, int m_br)
 		for (j = 0; j < min(10, m_br); j++)
 			cout << phc[j] << " ";
 	}
-	cout << endl; 
+	cout << endl;
 
 	free(pha);
 	free(phb);
@@ -159,11 +159,11 @@ double OnMultBlock(int m_ar, int bkSize)
 			{
 				for (int i = x; i < x + bkSize; i++)
 				{
-					for (int j = y; j < y + bkSize; j++)
+					for (int k = y; k < y + bkSize; k++)
 					{
-						for (int k = z; k < z + bkSize; k++)
+						for (int j = z; j < z + bkSize; j++)
 						{
-							phc[i * m_ar + k] += pha[i * m_ar + j] * phb[j * m_ar + k];
+							phc[i * m_ar + j] += pha[i * m_ar + k] * phb[k * m_ar + j];
 						}
 					}
 				}
@@ -194,42 +194,47 @@ double OnMultBlock(int m_ar, int bkSize)
 	return elapsed;
 }
 
-void handle_error (int retval)
+void handle_error(int retval)
 {
-  printf("PAPI error %d: %s\n", retval, PAPI_strerror(retval));
-  exit(1);
-}
-
-void init_papi() {
-  int retval = PAPI_library_init(PAPI_VER_CURRENT);
-  if (retval != PAPI_VER_CURRENT && retval < 0) {
-	printf("PAPI library version mismatch!\n");
+	printf("PAPI error %d: %s\n", retval, PAPI_strerror(retval));
 	exit(1);
-  }
-  if (retval < 0) handle_error(retval);
-
-  std::cout << "PAPI Version Number: MAJOR: " << PAPI_VERSION_MAJOR(retval)
-			<< " MINOR: " << PAPI_VERSION_MINOR(retval)
-			<< " REVISION: " << PAPI_VERSION_REVISION(retval) << "\n";
 }
 
-typedef double (*f)(int, int); 
+void init_papi()
+{
+	int retval = PAPI_library_init(PAPI_VER_CURRENT);
+	if (retval != PAPI_VER_CURRENT && retval < 0)
+	{
+		printf("PAPI library version mismatch!\n");
+		exit(1);
+	}
+	if (retval < 0)
+		handle_error(retval);
 
-f func[3] = { &OnMult, &OnMultLine, &OnMultBlock};
+	std::cout << "PAPI Version Number: MAJOR: " << PAPI_VERSION_MAJOR(retval)
+			  << " MINOR: " << PAPI_VERSION_MINOR(retval)
+			  << " REVISION: " << PAPI_VERSION_REVISION(retval) << "\n";
+}
 
-struct params{
+typedef double (*f)(int, int);
+
+f func[3] = {&OnMult, &OnMultLine, &OnMultBlock};
+
+struct params
+{
 	int p1;
 	int p2;
 };
 
-void RunAll(){
+void RunAll()
+{
 
 	lxw_workbook *workbook = workbook_new("unformated_data.xlsx");
 	lxw_worksheet *worksheet = workbook_add_worksheet(workbook, NULL);
-	
+
 	struct params paramsV[34] = {
-		//OnMult
-		{600, 600}, 
+		// OnMult
+		{600, 600},
 		{1000, 1000},
 		{1400, 1400},
 		{1800, 1800},
@@ -237,8 +242,8 @@ void RunAll(){
 		{2600, 2600},
 		{3000, 3000},
 
-		//OnMultLine
-		{600, 600}, 
+		// OnMultLine
+		{600, 600},
 		{1000, 1000},
 		{1400, 1400},
 		{1800, 1800},
@@ -250,47 +255,50 @@ void RunAll(){
 		{8192, 8192},
 		{10240, 10240},
 
-		//OnMultBlock
-		{4096,128},
-		{4096,256},
-		{4096,512},
-		{4096,1024},
-		{6144,128},
-		{6144,256},
-		{6144,512},
-		{6144,1024},
-		{8192,128},
-		{8192,256},
-		{8192,512},
-		{8192,1024},
-		{10240,128},
-		{10240,256},
-		{10240,512},
-		{10240,1024}
-	};
+		// OnMultBlock
+		{4096, 128},
+		{4096, 256},
+		{4096, 512},
+		{4096, 1024},
+		{6144, 128},
+		{6144, 256},
+		{6144, 512},
+		{6144, 1024},
+		{8192, 128},
+		{8192, 256},
+		{8192, 512},
+		{8192, 1024},
+		{10240, 128},
+		{10240, 256},
+		{10240, 512},
+		{10240, 1024}};
 
-	
 	int i = 0, col = 1;
-	for (int j = 0; j < 34; j++){
-		if(j == 7 || j == 18) i++;
+	for (int j = 0; j < 34; j++)
+	{
+		if (j == 7 || j == 18)
+			i++;
 
 		// Start counting
 		ret = PAPI_start(EventSet);
-		if (ret != PAPI_OK) cout << "ERROR: Start PAPI" << endl;
+		if (ret != PAPI_OK)
+			cout << "ERROR: Start PAPI" << endl;
 
 		double value = func[i](paramsV[j].p1, paramsV[j].p2);
 
 		ret = PAPI_stop(EventSet, values);
-		if (ret != PAPI_OK) cout << "ERROR: Stop PAPI" << endl;
-		printf("L1 DCM: %lld \n",values[0]);
-        printf("L1 DCA: %lld \n",values[1]);
-		printf("L2 DCM: %lld \n",values[2]);
-        printf("L2 DCH: %lld \n\n",values[3]);
+		if (ret != PAPI_OK)
+			cout << "ERROR: Stop PAPI" << endl;
+		printf("L1 DCM: %lld \n", values[0]);
+		printf("L1 DCA: %lld \n", values[1]);
+		printf("L2 DCM: %lld \n", values[2]);
+		printf("L2 DCH: %lld \n\n", values[3]);
 
-        ret = PAPI_reset( EventSet );
-        if ( ret != PAPI_OK ) cout << "FAIL reset" << endl;
+		ret = PAPI_reset(EventSet);
+		if (ret != PAPI_OK)
+			cout << "FAIL reset" << endl;
 
-		worksheet_write_number(worksheet, j+1, 2, value, NULL);
+		worksheet_write_number(worksheet, j + 1, 2, value, NULL);
 
 		worksheet_write_string(worksheet, col, 3, "L1 DCM", NULL);
 		worksheet_write_number(worksheet, col, 4, values[0], NULL);
@@ -311,29 +319,29 @@ void RunAll(){
 		worksheet_write_string(worksheet, col, 3, "", NULL);
 		worksheet_write_string(worksheet, col, 4, "", NULL);
 		col++;
-	}	
+	}
 
 	workbook_close(workbook);
 
-	ret = PAPI_remove_event( EventSet, PAPI_L1_DCM );
-    if ( ret != PAPI_OK )
-        std::cout << "FAIL remove event L1_DCM" << endl; 
+	ret = PAPI_remove_event(EventSet, PAPI_L1_DCM);
+	if (ret != PAPI_OK)
+		std::cout << "FAIL remove event L1_DCM" << endl;
 
-    ret = PAPI_remove_event( EventSet, PAPI_L1_DCA );
-    if ( ret != PAPI_OK )
-        std::cout << "FAIL remove event L1_DCA" << endl; 
+	ret = PAPI_remove_event(EventSet, PAPI_L1_DCA);
+	if (ret != PAPI_OK)
+		std::cout << "FAIL remove event L1_DCA" << endl;
 
-    ret = PAPI_remove_event( EventSet, PAPI_L2_DCM );
-    if ( ret != PAPI_OK )
-        std::cout << "FAIL remove event L2_DCM" << endl; 
+	ret = PAPI_remove_event(EventSet, PAPI_L2_DCM);
+	if (ret != PAPI_OK)
+		std::cout << "FAIL remove event L2_DCM" << endl;
 
-    ret = PAPI_remove_event( EventSet, PAPI_L2_DCH );
-    if ( ret != PAPI_OK )
-        std::cout << "FAIL remove event L2_DCH" << endl; 
+	ret = PAPI_remove_event(EventSet, PAPI_L2_DCH);
+	if (ret != PAPI_OK)
+		std::cout << "FAIL remove event L2_DCH" << endl;
 
-    ret = PAPI_destroy_eventset( &EventSet );
-    if ( ret != PAPI_OK )
-        std::cout << "FAIL destroy" << endl;
+	ret = PAPI_destroy_eventset(&EventSet);
+	if (ret != PAPI_OK)
+		std::cout << "FAIL destroy" << endl;
 }
 
 int main(int argc, char *argv[])
@@ -343,25 +351,29 @@ int main(int argc, char *argv[])
 	int lin, col, bkSize;
 	int op;
 
-
-	ret = PAPI_library_init( PAPI_VER_CURRENT );
-	if ( ret != PAPI_VER_CURRENT )
+	ret = PAPI_library_init(PAPI_VER_CURRENT);
+	if (ret != PAPI_VER_CURRENT)
 		std::cout << "FAIL" << endl;
 
 	ret = PAPI_create_eventset(&EventSet);
-	if (ret != PAPI_OK) cout << "ERROR: create eventset" << endl;
+	if (ret != PAPI_OK)
+		cout << "ERROR: create eventset" << endl;
 
-    ret = PAPI_add_event(EventSet,PAPI_L1_DCM);
-    if (ret != PAPI_OK) cout << "ERROR: PAPI_L1_DCM" << endl;
+	ret = PAPI_add_event(EventSet, PAPI_L1_DCM);
+	if (ret != PAPI_OK)
+		cout << "ERROR: PAPI_L1_DCM" << endl;
 
-    ret = PAPI_add_event(EventSet,PAPI_L1_DCA);
-    if (ret != PAPI_OK) cout << "ERROR: PAPI_L1_DCA" << endl;
+	ret = PAPI_add_event(EventSet, PAPI_L1_DCA);
+	if (ret != PAPI_OK)
+		cout << "ERROR: PAPI_L1_DCA" << endl;
 
-    ret = PAPI_add_event(EventSet,PAPI_L2_DCM);
-    if (ret != PAPI_OK) cout << "ERROR: PAPI_L2_DCM" << endl;
+	ret = PAPI_add_event(EventSet, PAPI_L2_DCM);
+	if (ret != PAPI_OK)
+		cout << "ERROR: PAPI_L2_DCM" << endl;
 
-    ret = PAPI_add_event(EventSet,PAPI_L2_DCH);
-    if (ret != PAPI_OK) cout << "ERROR: PAPI_L2_DCH" << endl;
+	ret = PAPI_add_event(EventSet, PAPI_L2_DCH);
+	if (ret != PAPI_OK)
+		cout << "ERROR: PAPI_L2_DCH" << endl;
 
 	op = 1;
 	do
@@ -377,10 +389,12 @@ int main(int argc, char *argv[])
 		if (op == 0)
 			break;
 
-		if(op != 4){
+		if (op != 4)
+		{
 			// Start counting
 			ret = PAPI_start(EventSet);
-			if (ret != PAPI_OK) cout << "ERROR: Start PAPI" << endl;
+			if (ret != PAPI_OK)
+				cout << "ERROR: Start PAPI" << endl;
 		}
 
 		switch (op)
@@ -414,37 +428,40 @@ int main(int argc, char *argv[])
 			break;
 
 		ret = PAPI_stop(EventSet, values);
-		if (ret != PAPI_OK) cout << "ERROR: Stop PAPI" << endl;
-		printf("L1 DCM: %lld \n",values[0]);
-        printf("L1 DCA: %lld \n",values[1]);
-		printf("L2 DCM: %lld \n",values[2]);
-        printf("L2 DCH: %lld \n",values[3]);
+		if (ret != PAPI_OK)
+			cout << "ERROR: Stop PAPI" << endl;
+		printf("L1 DCM: %lld \n", values[0]);
+		printf("L1 DCA: %lld \n", values[1]);
+		printf("L2 DCM: %lld \n", values[2]);
+		printf("L2 DCH: %lld \n", values[3]);
 
-        ret = PAPI_reset( EventSet );
-        if ( ret != PAPI_OK ) cout << "FAIL reset" << endl;
+		ret = PAPI_reset(EventSet);
+		if (ret != PAPI_OK)
+			cout << "FAIL reset" << endl;
 
 	} while (op != 0);
 
-	if(op != 4){
+	if (op != 4)
+	{
 
-		ret = PAPI_remove_event( EventSet, PAPI_L1_DCM );
-		if ( ret != PAPI_OK )
-			std::cout << "FAIL remove event L1_DCM" << endl; 
+		ret = PAPI_remove_event(EventSet, PAPI_L1_DCM);
+		if (ret != PAPI_OK)
+			std::cout << "FAIL remove event L1_DCM" << endl;
 
-		ret = PAPI_remove_event( EventSet, PAPI_L1_DCA );
-		if ( ret != PAPI_OK )
-			std::cout << "FAIL remove event L1_DCA" << endl; 
+		ret = PAPI_remove_event(EventSet, PAPI_L1_DCA);
+		if (ret != PAPI_OK)
+			std::cout << "FAIL remove event L1_DCA" << endl;
 
-		ret = PAPI_remove_event( EventSet, PAPI_L2_DCM );
-		if ( ret != PAPI_OK )
-			std::cout << "FAIL remove event L2_DCM" << endl; 
+		ret = PAPI_remove_event(EventSet, PAPI_L2_DCM);
+		if (ret != PAPI_OK)
+			std::cout << "FAIL remove event L2_DCM" << endl;
 
-		ret = PAPI_remove_event( EventSet, PAPI_L2_DCH );
-		if ( ret != PAPI_OK )
-			std::cout << "FAIL remove event L2_DCH" << endl; 
+		ret = PAPI_remove_event(EventSet, PAPI_L2_DCH);
+		if (ret != PAPI_OK)
+			std::cout << "FAIL remove event L2_DCH" << endl;
 
-		ret = PAPI_destroy_eventset( &EventSet );
-		if ( ret != PAPI_OK )
+		ret = PAPI_destroy_eventset(&EventSet);
+		if (ret != PAPI_OK)
 			std::cout << "FAIL destroy" << endl;
 	}
 }
