@@ -2,7 +2,7 @@
 
 CPD Project 1 of group T04G13.
 
-## Instalation and compilation instructions
+## Installation and compilation instructions
 
 Since C++ and Go are compiled languages and JS is interpreted, in order to run the programs, we need to install their compilers/interpreters and all the required dependencies. 
 **Note**: If you do not wish to install all the dependencies, C++ and Go programs without them are available at [/src/nolib](/src/nolib/)
