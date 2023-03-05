@@ -44,7 +44,7 @@ Command line arguments:
 - Block Size:
     - integer > 1
 
-NOTE: While running some of the calculations, it may happen that an error is thrown "FATAL ERROR: CALL_AND_RETRY_LAST Allocation failed - JavaScript heap out of memory". This may or may not happen because node limits the ammount of memory a process can use. To bypass this limit you need to run the following command: export NODE_OPTIONS=--max_old_space_size=4096
+NOTE: While running some of the calculations, it may happen that an error is thrown "FATAL ERROR: CALL_AND_RETRY_LAST Allocation failed - JavaScript heap out of memory". This may or may not happen because node limits the amount of memory a process can use. To bypass this limit you need to run the following command: export NODE_OPTIONS=--max_old_space_size=4096
 
 ## Group members:
 
