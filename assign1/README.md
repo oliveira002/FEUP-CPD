@@ -48,6 +48,11 @@ Since we're not using the browser to run our code, we do not have a GUI and pack
 **NOTE**: While running some of the calculations, it may happen that an error is thrown: `FATAL ERROR: CALL_AND_RETRY_LAST Allocation failed - JavaScript heap out of memory`. <br>
 This may or may not happen because node limits the amount of memory a process can use. To bypass this limit you need to run the following command: `export NODE_OPTIONS=--max_old_space_size=4096`.
 
+## Data and testing
+
+All the collected data is available at (/doc/data/all_data.xlsx)[https://git.fe.up.pt/cpd/2223/t04/g13/-/blob/main/assign1/doc/data/all_data.xlsx] in the sheet "Folha1". <br>
+Some extra charts that didn't make it to the final report can be seen in the sheet "Graficos" of the excel document and the conclusions to be taken from them are left as an exercise to the reader.
+
 ## Group members:
 
 1. Diogo Babo (up202004950@up.pt)
