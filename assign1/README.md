@@ -2,6 +2,10 @@
 
 CPD Project 1 of group T04G13.
 
+## Report
+
+The report can be found at [/doc/CPD_T04G13_assign1_report.pdf](https://git.fe.up.pt/cpd/2223/t04/g13/-/blob/main/assign1/doc/CPD_T04G13_assign1_report.pdf)
+
 ## Installation and compilation instructions
 
 Since C++ and Go are compiled languages and JS is interpreted, in order to run the programs, we need to install their compilers/interpreters and all the required dependencies. <br>
@@ -50,7 +54,7 @@ This may or may not happen because node limits the amount of memory a process ca
 
 ## Data and testing
 
-All the collected data is available at (/doc/data/all_data.xlsx)[https://git.fe.up.pt/cpd/2223/t04/g13/-/blob/main/assign1/doc/data/all_data.xlsx] in the sheet "Folha1". <br>
+All the collected data is available at [/doc/data/all_data.xlsx](https://git.fe.up.pt/cpd/2223/t04/g13/-/blob/main/assign1/doc/data/all_data.xlsx) in the sheet "Folha1". <br>
 Some extra charts that didn't make it to the final report can be seen in the sheet "Graficos" of the excel document and the conclusions to be taken from them are left as an exercise to the reader.
 
 ## Group members:
