@@ -1,5 +1,7 @@
 package org.t04.g13;
 
+import server.src.main.java.org.t04.g13.Utils;
+
 import java.net.*;
 import java.io.*;
 
@@ -42,20 +44,16 @@ public class Client {
             String password = consoleIn.readLine();
             out.println(password);
 
-            System.out.println(this.readResponse(socket));
+            while(true) {
+                String msg = Utils.readResponse(socket);
+                if(msg != null) {
+                    System.out.println(msg);
+                }
+            }
 
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public String readResponse(Socket socket) {
-        try {
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-            return in.readLine();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
 }

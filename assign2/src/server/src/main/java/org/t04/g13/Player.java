@@ -40,6 +40,10 @@ public class Player {
         return elo;
     }
 
+    public Socket getClientSocket() {
+        return this.clientSocket;
+    }
+
     public void setElo(int elo) {
         this.elo = elo;
     }

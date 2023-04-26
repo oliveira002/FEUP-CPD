@@ -1,11 +1,12 @@
 package server.src.main.java.org.t04.g13;
 
 import java.io.*;
+import java.net.Socket;
 import java.util.*;
 
 public class Game extends Thread {
 
-    private static final int MAX_PLAYERS = 5;
+    private static final int MAX_PLAYERS = 2;
     private static final int NUM_QUESTIONS = 3;
     private static final int QUESTION_TIME = 80000; // 10 seconds
 
@@ -51,4 +52,30 @@ public class Game extends Thread {
         this.players.add(player);
     }
 
+    public void start() {
+        this.initGame();
+        this.displayQuestions();
+    }
+    public void initGame() {
+        this.messageEveryone("GAME_START");
+    }
+
+    public void displayQuestions() {
+        for(int i = 0; i < NUM_QUESTIONS; i++) {
+            Question quest = questions.get(i);
+            List<String> all = quest.getAnswers();
+            String question = quest.getQuestion();
+            this.messageEveryone(question);
+            for(int j = 0; j < 4; j++) {
+                this.messageEveryone(all.get(i));
+            }
+        }
+    }
+
+    public void messageEveryone(String message) {
+        for(Player play: players) {
+            Socket socket = play.getClientSocket();
+            Utils.sendMessage(socket,message);
+        }
+    }
 }

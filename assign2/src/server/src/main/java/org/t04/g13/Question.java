@@ -1,13 +1,18 @@
 package server.src.main.java.org.t04.g13;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public class Question {
     private String question;
-    private String[] choices;
+
+    private List<String> choices;
     private String answer;
 
     public Question(String question, String answer1, String answer2, String answer3, String answer4, String answer) {
         this.question = question;
-        this.choices = new String[]{answer1, answer2, answer3, answer4};
+        this.choices = Arrays.asList(answer1, answer2, answer3, answer4);
         this.answer = answer;
     }
 
@@ -15,7 +20,7 @@ public class Question {
         return question;
     }
 
-    public String[] getAnswers() {
+    public List<String> getAnswers() {
         return choices;
     }
 

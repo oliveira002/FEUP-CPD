@@ -28,14 +28,14 @@ public class Server {
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("Client connected: " + clientSocket.getInetAddress().getHostName());
 
-                String username = this.readResponse(clientSocket);
+                String username = Utils.readResponse(clientSocket);
                 System.out.printf("Received Username: %s%n", username);
-                String password = this.readResponse(clientSocket);
+                String password = Utils.readResponse(clientSocket);
                 System.out.printf("Received Password: %s%n", password);
                 Player player = new Player(clientSocket);
                 player.setUser(username,password,0);
 
-                this.sendMessage(clientSocket,"Added to Queue");
+                Utils.sendMessage(clientSocket,"Added to Queue");
                 addToQueue(player);
             }
         } catch (Exception e) {
@@ -45,34 +45,14 @@ public class Server {
 
     private void addToQueue(Player player) {
         waitingClients.offer(player);
-        if (waitingClients.size() >= 5) {
+        if (waitingClients.size() >= 2) {
             Game game = new Game();
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 2; i++) {
                 Player currPlayer = waitingClients.poll();
                 game.addPlayer(currPlayer);
             }
+            game.start();
             games.add(game);
-        }
-    }
-
-    public String readResponse(Socket socket) {
-        try {
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-            String response = in.readLine();
-
-            return response;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public void sendMessage(Socket socket, String message) {
-        try {
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-            out.println(message);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 
