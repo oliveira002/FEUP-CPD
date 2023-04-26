@@ -1,13 +1,15 @@
+package org.t04.g13;
+
 import java.io.*;
 import java.net.*;
 import java.util.Date;
  
 /**
- * This program demonstrates a simple TCP/IP socket server.
+ * This program used a simple TCP/IP socket server.
  *
  * @author www.codejava.net
  */
-public class TimeServer {
+public class Server {
  
     public static void main(String[] args) {
         if (args.length < 1) return;

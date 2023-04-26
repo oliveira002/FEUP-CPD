@@ -1,12 +1,14 @@
+package org.t04.g13;
+
 import java.net.*;
 import java.io.*;
  
 /**
- * This program demonstrates a simple TCP/IP socket client.
+ * This program used a simple TCP/IP socket client.
  *
  * @author www.codejava.net
  */
-public class TimeClient {
+public class Client {
  
     public static void main(String[] args) {
         if (args.length < 2) return;
