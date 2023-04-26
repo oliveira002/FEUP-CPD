@@ -64,11 +64,13 @@ public class Game extends Thread {
         for(int i = 0; i < NUM_QUESTIONS; i++) {
             Question quest = questions.get(i);
             List<String> all = quest.getAnswers();
-            String question = quest.getQuestion();
+            String question = "Q: " + quest.getQuestion();
             this.messageEveryone(question);
             for(int j = 0; j < 4; j++) {
-                this.messageEveryone(all.get(i));
+                String opt = Integer.toString(j+1) + ") " + all.get(j) +'\n';
+                this.messageEveryone(opt);
             }
+            this.messageEveryone("Type your answer:");
         }
     }
 

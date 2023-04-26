@@ -44,8 +44,8 @@ public class Client {
             String password = consoleIn.readLine();
             out.println(password);
 
-            while(true) {
-                String msg = Utils.readResponse(socket);
+            String msg;
+            while(!(msg=Utils.readResponse(socket)).equals("GAME_EXIT")) {
                 if(msg != null) {
                     System.out.println(msg);
                 }
