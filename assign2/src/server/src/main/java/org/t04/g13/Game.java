@@ -6,9 +6,6 @@ import java.util.*;
 
 public class Game extends Thread {
 
-    private static final int MAX_PLAYERS = 2;
-    private static final int NUM_QUESTIONS = 3;
-    private static final int QUESTION_TIME = 80000; // 10 seconds
 
     private List<Player> players;
     private List<Question> questions;
@@ -54,14 +51,45 @@ public class Game extends Thread {
 
     public void start() {
         this.initGame();
-        this.displayQuestions();
+        for(int i = 0; i < Utils.NUM_QUESTIONS; i++) {
+            this.gameRound();
+        }
+        this.messageEveryone(Utils.GAME_END);
     }
     public void initGame() {
-        this.messageEveryone("GAME_START");
+        this.messageEveryone(Utils.GAME_START);
     }
 
+    public void gameRound() {
+        Random r = new Random();
+        int idx = r.nextInt(questions.size() - 1);
+        Question question =  questions.get(idx);
+        String ask = "Q: " + question.getQuestion();
+        List<String> all = question.getAnswers();
+        this.messageEveryone(ask);
+
+        for(int j = 0; j < 4; j++) {
+            String opt = Integer.toString(j+1) + ") " + all.get(j) +'\n';
+            this.messageEveryone(opt);
+        }
+        this.messageEveryone(Utils.ANSWER_TIME);
+
+        for(Player play: players) {
+            Socket playerSocket = play.getClientSocket();
+            String answer = Utils.readResponse(playerSocket);
+            System.out.println(answer);
+            int answerIdx = Integer.parseInt(answer);
+            if(all.get(answerIdx).equals(question.getCorrectAnswer())) {
+                Utils.sendMessage(playerSocket,"Correct Answer!!");
+            }
+            else {
+                Utils.sendMessage(playerSocket,"Wrong Answer!!");
+
+            }
+        }
+    }
     public void displayQuestions() {
-        for(int i = 0; i < NUM_QUESTIONS; i++) {
+        for(int i = 0; i < Utils.NUM_QUESTIONS; i++) {
             Question quest = questions.get(i);
             List<String> all = quest.getAnswers();
             String question = "Q: " + quest.getQuestion();

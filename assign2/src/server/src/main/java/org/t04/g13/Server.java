@@ -35,7 +35,7 @@ public class Server {
                 Player player = new Player(clientSocket);
                 player.setUser(username,password,0);
 
-                Utils.sendMessage(clientSocket,"Added to Queue");
+                Utils.sendMessage(clientSocket,Utils.ENQUEUE);
                 addToQueue(player);
             }
         } catch (Exception e) {
@@ -45,9 +45,9 @@ public class Server {
 
     private void addToQueue(Player player) {
         waitingClients.offer(player);
-        if (waitingClients.size() >= 2) {
+        if (waitingClients.size() >= Utils.MAX_PLAYERS) {
             Game game = new Game();
-            for (int i = 0; i < 2; i++) {
+            for (int i = 0; i < Utils.MAX_PLAYERS; i++) {
                 Player currPlayer = waitingClients.poll();
                 game.addPlayer(currPlayer);
             }

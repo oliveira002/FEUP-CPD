@@ -7,13 +7,28 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 public class Utils {
+
+    static final int MAX_PLAYERS = 2;
+
+    static final int NUM_QUESTIONS = 3;
+
+    static final int QUESTION_TIME = 80000;
+
+    static final String ENQUEUE = "IN_QUEUE";
+
+    static final String ANSWER_TIME = "ANSWER_TIME";
+
+    static final String GAME_START = "GAME_START";
+
+    static final String GAME_END = "GAME_FINISHED";
+
+
+
+
     public static String readResponse(Socket socket) {
         try {
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-            String response = in.readLine();
-
-            return response;
+            return in.readLine();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
