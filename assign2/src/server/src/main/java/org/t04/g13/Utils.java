@@ -16,6 +16,10 @@ public class Utils {
 
     static final String ENQUEUE = "IN_QUEUE";
 
+    static final String START_ROUND = "START_ROUND";
+
+    static final String END_ROUND = "END_ROUND";
+
     static final String ANSWER_TIME = "ANSWER_TIME";
 
     static final String GAME_START = "GAME_START";
@@ -38,6 +42,7 @@ public class Utils {
         try {
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             out.println(message);
+            out.flush();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

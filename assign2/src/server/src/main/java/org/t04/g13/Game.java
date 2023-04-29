@@ -61,32 +61,45 @@ public class Game extends Thread {
     }
 
     public void gameRound() {
+        this.messageEveryone(Utils.START_ROUND);
         Random r = new Random();
         int idx = r.nextInt(questions.size() - 1);
-        Question question =  questions.get(idx);
+        Question question = questions.get(idx);
         String ask = "Q: " + question.getQuestion();
         List<String> all = question.getAnswers();
         this.messageEveryone(ask);
 
-        for(int j = 0; j < 4; j++) {
-            String opt = Integer.toString(j+1) + ") " + all.get(j) +'\n';
+        for (int j = 0; j < 4; j++) {
+            String opt = Integer.toString(j + 1) + ") " + all.get(j) + '\n';
             this.messageEveryone(opt);
         }
+
         this.messageEveryone(Utils.ANSWER_TIME);
 
-        for(Player play: players) {
-            Socket playerSocket = play.getClientSocket();
-            String answer = Utils.readResponse(playerSocket);
-            System.out.println(answer);
-            int answerIdx = Integer.parseInt(answer);
-            if(all.get(answerIdx).equals(question.getCorrectAnswer())) {
-                Utils.sendMessage(playerSocket,"Correct Answer!!");
-            }
-            else {
-                Utils.sendMessage(playerSocket,"Wrong Answer!!");
+        try {
+            Thread.sleep(10000); // wait for 5 seconds
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
 
+        for (Player play : players) {
+            Socket playerSocket = play.getClientSocket();
+            Utils.sendMessage(playerSocket,Utils.END_ROUND);
+            String answer = Utils.readResponse(playerSocket);
+            if(answer == null) {
+                Utils.sendMessage(playerSocket, "Wrong Answer!!");
+                continue;
+            }
+            int answerIdx = Integer.parseInt(answer);
+
+
+            if (all.get(answerIdx).equals(question.getCorrectAnswer())) {
+                Utils.sendMessage(playerSocket, "Correct Answer!!");
+            } else {
+                Utils.sendMessage(playerSocket, "Wrong Answer!!");
             }
         }
+
     }
     public void displayQuestions() {
         for(int i = 0; i < Utils.NUM_QUESTIONS; i++) {

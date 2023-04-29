@@ -54,42 +54,62 @@ public class Client {
     }
 
     public void gameLoop(Socket socket) {
-        try {
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+        try (PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+             BufferedReader consoleIn = new BufferedReader(new InputStreamReader(System.in))) {
 
-            BufferedReader consoleIn = new BufferedReader(new InputStreamReader(System.in));
-            boolean answerTime = false;
-
-            while (!gameFinished) {
+            while (true) {
                 String message = Utils.readResponse(socket);
-                if(message == null) {
+                if (message == null) {
                     continue;
                 }
-                if (message.equals("IN_QUEUE")) {
-                    System.out.println("Waiting for other players to join the game...");
-                } else if (message.equals("GAME_START")) {
-                    System.out.println("The game has started!");
-                    gameStarted = true;
-                } else if (message.equals("GAME_FINISHED")) {
-                    System.out.println("The game has ended!");
-                    gameFinished = true;
+                else if(message.equals("IN_QUEUE")) {
+                    System.out.println("Waiting for other players to join");
                 }
-                else if (message.equals("ANSWER_TIME")) {
-                    System.out.println("Type your answer:");
-                    answerTime = true;
-                } else {
-                    if (gameStarted && answerTime) {
-                        String answer = consoleIn.readLine();
-                        out.println(answer);
-                        answerTime = false;
+                else if(message.equals("GAME_FINISHED")) {
+                    System.out.println("Game Ended");
+                    break;
+                }
+                else if(message.equals("GAME_START")) {
+                    System.out.println("Game is about to start");
+
+                }
+                else if(message.equals("START_ROUND")) {
+                    System.out.println("Round Started");
+                    this.round(socket);
+                }
+                else if(message.equals("ANSWER_TIME")) {
+                    System.out.println("Type your answer");
+
+                    // Wait for 5 seconds for the player's input
+                    long startTime = System.currentTimeMillis();
+                    long elapsedTime = 0;
+                    while (elapsedTime < 7000) {
+                        if (consoleIn.ready()) {
+                            String answer = consoleIn.readLine();
+                            out.println(answer);
+                            break;
+                        }
+                        elapsedTime = System.currentTimeMillis() - startTime;
                     }
-                    else if(gameStarted) {
-                        System.out.println(message);
-                    }
+
+                }
+                else if(message.equals("END_ROUND")) {
+                    System.out.println(Utils.readResponse(socket));
+                }
+                else {
+                    System.out.println(message);
                 }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public void round(Socket socket) {
+        String question = Utils.readResponse(socket);
+        System.out.println(question);
+        for(int i = 0; i < 4; i++) {
+            System.out.println(Utils.readResponse(socket));
         }
     }
 }
