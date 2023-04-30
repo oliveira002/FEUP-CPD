@@ -21,7 +21,7 @@ public class Game extends Thread {
     }
 
     public List<Question> parseQuestions() throws IOException {
-        String filename = "src/questions.csv";
+        String filename = "src/server/src/main/resources/questions.csv";
         List<Question> all = new ArrayList<>();
 
         try {

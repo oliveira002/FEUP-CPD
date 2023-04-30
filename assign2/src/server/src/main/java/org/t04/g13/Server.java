@@ -1,6 +1,5 @@
 package server.src.main.java.org.t04.g13;
 
-import server.src.main.java.org.t04.g13.Game;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -10,6 +9,9 @@ import java.util.List;
 
 import java.util.LinkedList;
 import java.util.Queue;
+
+import static server.src.main.java.org.t04.g13.Utils.*;
+
 
 public class Server {
     private static final int PORT = 8000;
@@ -23,20 +25,28 @@ public class Server {
 
     public void start() {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            System.out.println("Server started on port " + PORT);
+            System.out.println("Server started on port " + PORT + "\n");
             while(true) {
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("Client connected: " + clientSocket.getInetAddress().getHostName());
 
-                String username = Utils.readResponse(clientSocket);
-                System.out.printf("Received Username: %s%n", username);
-                String password = Utils.readResponse(clientSocket);
-                System.out.printf("Received Password: %s%n", password);
-                Player player = new Player(clientSocket);
-                player.setUser(username,password,0);
+                new Thread(() -> {
+                    //
 
-                Utils.sendMessage(clientSocket,Utils.ENQUEUE);
-                addToQueue(player);
+                    // Read the username and password from the client
+                    String username = readResponse(clientSocket);
+                    System.out.printf("Received Username: %s%n", username);
+                    String password = readResponse(clientSocket);
+                    System.out.printf("Received Password: %s%n", password);
+
+                    // Create a new player object and add it to the queue
+                    Player player = new Player(clientSocket);
+                    player.setUser(username, password, 0);
+
+                    sendMessage(clientSocket,ENQUEUE);
+                    addToQueue(player);
+                }).start();
+
             }
         } catch (Exception e) {
             System.out.println("Server exception: " + e.getMessage());
@@ -45,9 +55,9 @@ public class Server {
 
     private void addToQueue(Player player) {
         waitingClients.offer(player);
-        if (waitingClients.size() >= Utils.MAX_PLAYERS) {
+        if (waitingClients.size() >= MAX_PLAYERS) {
             Game game = new Game();
-            for (int i = 0; i < Utils.MAX_PLAYERS; i++) {
+            for (int i = 0; i < MAX_PLAYERS; i++) {
                 Player currPlayer = waitingClients.poll();
                 game.addPlayer(currPlayer);
             }
