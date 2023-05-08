@@ -4,56 +4,54 @@ package server.src.main.java.org.t04.g13;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static server.src.main.java.org.t04.g13.Utils.*;
 
 
 public class Server {
-    private static final int PORT = 8000;
+    private final int PORT;
     private final List<Game> games;
     private final Queue<Player> waitingClients;
+    private ExecutorService auth_pool;
 
-    public Server() {
+    public Server(int port) {
+
+        this.PORT = port;
+
         games = new ArrayList<>();
-        waitingClients = new LinkedList<>();
+        waitingClients = new ArrayDeque<>();
+
+        //New thread pool with at most MAX_TRHEADS authentication attempts
+        auth_pool = Executors.newFixedThreadPool(MAX_TRHEADS);
     }
 
     public void start() {
+
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            System.out.println("Server started on port " + PORT + "\n");
+            int i = 1;
+            System.out.println("Server started on port " + PORT);
             while(true) {
                 Socket clientSocket = serverSocket.accept();
-                System.out.println("Client connected: " + clientSocket.getInetAddress().getHostName());
+                System.out.println("\n(#" + i + ") New client connected from IP: " + clientSocket.getInetAddress().getHostAddress());
 
-                new Thread(() -> {
-                    //
+                Runnable auth = new Auth(clientSocket, this, i++);
 
-                    // Read the username and password from the client
-                    String username = readResponse(clientSocket);
-                    System.out.printf("Received Username: %s%n", username);
-                    String password = readResponse(clientSocket);
-                    System.out.printf("Received Password: %s%n", password);
-
-                    // Create a new player object and add it to the queue
-                    Player player = new Player(clientSocket);
-                    player.setUser(username, password, 0);
-
-                    sendMessage(clientSocket,ENQUEUE);
-                    addToQueue(player);
-                }).start();
-
+                //TODO catch exception -> client disconnects before or during his auth process
+                //TODO stop auth process if it's taking too long
+                auth_pool.execute(auth);
             }
+
         } catch (Exception e) {
-            System.out.println("Server exception: " + e.getMessage());
+            System.err.println("Server exception: " + e.getMessage());
+            auth_pool.shutdown();
         }
     }
 
-    private void addToQueue(Player player) {
+    void addToQueue(Player player) {
         waitingClients.offer(player);
         if (waitingClients.size() >= MAX_PLAYERS) {
             Game game = new Game();
@@ -68,7 +66,19 @@ public class Server {
 
 
     public static void main(String[] args) {
-        Server server = new Server();
+
+        int port = 8000;
+        if(args.length != 0){
+            try{
+                port = Integer.parseInt(args[0]);
+            }
+            catch (NumberFormatException e){
+                System.out.printf("First argument has to be an integer, %s not allowed!%n", args[0]);
+                System.out.printf("Using default port: %d%n%n", port);
+            }
+        }
+
+        Server server = new Server(port);
         server.start();
     }
 

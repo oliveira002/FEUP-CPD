@@ -1,10 +1,11 @@
 package client.src.main.java.org.t04.g13;
 
-import server.src.main.java.org.t04.g13.Utils;
+import static server.src.main.java.org.t04.g13.Utils.*;
 
 import java.net.*;
 import java.io.*;
 import java.util.Objects;
+
 
 /**
  * This program used a simple TCP/IP socket client.
@@ -38,16 +39,32 @@ public class Client {
     public void authentication(Socket socket) {
         try {
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-
             BufferedReader consoleIn = new BufferedReader(new InputStreamReader(System.in));
 
-            System.out.println("Enter Username");
-            String username = consoleIn.readLine();
-            out.println(username);
+            //Authentication method selection
+            String auth_text = readResponse(socket);
+            int opt;
 
-            System.out.println("Enter Password");
-            String password = consoleIn.readLine();
-            out.println(password);
+            //Input validation
+            while(true){
+                String option = consoleIn.readLine();
+                System.out.println(auth_text);
+                if(!option.matches("\\d+")){
+                    System.out.println("Invalid option!\n");
+                    continue;
+                }
+                opt = Integer.parseInt(option);
+                if(opt == 0 || opt == 1 || opt == 2){
+                    out.println(opt);
+                    break;
+                }
+            }
+
+            //String username = consoleIn.readLine();
+            //out.println(username);
+
+            //String password = consoleIn.readLine();
+            //out.println(password);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -58,7 +75,7 @@ public class Client {
              BufferedReader consoleIn = new BufferedReader(new InputStreamReader(System.in))) {
 
             while (true) {
-                String message = Utils.readResponse(socket);
+                String message = readResponse(socket);
                 if (message == null) {
                     continue;
                 }
@@ -94,7 +111,7 @@ public class Client {
 
                 }
                 else if(message.equals("END_ROUND")) {
-                    System.out.println(Utils.readResponse(socket));
+                    System.out.println(readResponse(socket));
                 }
                 else {
                     System.out.println(message);
@@ -106,10 +123,10 @@ public class Client {
     }
 
     public void round(Socket socket) {
-        String question = Utils.readResponse(socket);
+        String question = readResponse(socket);
         System.out.println(question);
         for(int i = 0; i < 4; i++) {
-            System.out.println(Utils.readResponse(socket));
+            System.out.println(readResponse(socket));
         }
     }
 }

@@ -8,6 +8,7 @@ import java.net.Socket;
 
 public class Utils {
 
+    static final int MAX_TRHEADS = 2;
     static final int MAX_PLAYERS = 2;
     static final int NUM_QUESTIONS = 3;
     static final int QUESTION_TIME = 80000;
