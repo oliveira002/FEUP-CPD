@@ -29,7 +29,7 @@ public class Client {
     public void startConnection(String hostname, int port) {
         try {
             Socket socket = new Socket(hostname, port);
-            this.authentication(socket);
+            //this.authentication(socket);
             this.gameLoop(socket);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -97,18 +97,25 @@ public class Client {
                 else if(message.equals("ANSWER_TIME")) {
                     System.out.println("Type your answer");
 
+                    boolean answerSent = false;
+
                     // Wait for 5 seconds for the player's input
                     long startTime = System.currentTimeMillis();
                     long elapsedTime = 0;
-                    while (elapsedTime < 7000) {
+                    while (elapsedTime < 5000) {
                         if (consoleIn.ready()) {
                             String answer = consoleIn.readLine();
                             out.println(answer);
+                            answerSent = true;
                             break;
                         }
                         elapsedTime = System.currentTimeMillis() - startTime;
                     }
 
+                    if (!answerSent) {
+                        System.out.println("Time's up! Sending default answer...");
+                        out.println("-1");
+                    }
                 }
                 else if(message.equals("END_ROUND")) {
                     System.out.println(readResponse(socket));

@@ -57,7 +57,7 @@ public class Auth implements Runnable{
 
         // Create a new player object and add it to the queue
         Player player = new Player(clientSocket);
-        player.setUser(username, password, 0);
+        //player.setUser(username, password, 0);
 
         sendMessage(clientSocket, ENQUEUE);
         server.addToQueue(player);

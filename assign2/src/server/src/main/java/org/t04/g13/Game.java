@@ -49,12 +49,14 @@ public class Game extends Thread {
         this.players.add(player);
     }
 
-    public void start() {
-        this.initGame();
-        for(int i = 0; i < Utils.NUM_QUESTIONS; i++) {
-            this.gameRound();
+
+    @Override
+    public void run() {
+        initGame();
+        for (int i = 0; i < Utils.NUM_QUESTIONS; i++) {
+            gameRound();
         }
-        this.messageEveryone(Utils.GAME_END);
+        messageEveryone(Utils.GAME_END);
     }
     public void initGame() {
         this.messageEveryone(Utils.GAME_START);
@@ -86,7 +88,7 @@ public class Game extends Thread {
             Socket playerSocket = play.getClientSocket();
             Utils.sendMessage(playerSocket,Utils.END_ROUND);
             String answer = Utils.readResponse(playerSocket);
-            if(answer == null) {
+            if(Objects.equals(answer, "-1")) {
                 Utils.sendMessage(playerSocket, "Wrong Answer!!");
                 continue;
             }

@@ -37,12 +37,14 @@ public class Server {
             while(true) {
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("\n(#" + i + ") New client connected from IP: " + clientSocket.getInetAddress().getHostAddress());
-
-                Runnable auth = new Auth(clientSocket, this, i++);
+                Player player = new Player(clientSocket);
+                addToQueue(player);
+                sendMessage(clientSocket,ENQUEUE);
+                //Runnable auth = new Auth(clientSocket, this, i++);
 
                 //TODO catch exception -> client disconnects before or during his auth process
                 //TODO stop auth process if it's taking too long
-                auth_pool.execute(auth);
+                //auth_pool.execute(auth);
             }
 
         } catch (Exception e) {
