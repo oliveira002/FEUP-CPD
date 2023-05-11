@@ -63,45 +63,52 @@ public class Game extends Thread {
     }
 
     public void gameRound() {
-        this.messageEveryone(Utils.START_ROUND);
+        messageEveryone(Utils.START_ROUND);
         Random r = new Random();
         int idx = r.nextInt(questions.size() - 1);
         Question question = questions.get(idx);
         String ask = "Q: " + question.getQuestion();
         List<String> all = question.getAnswers();
-        this.messageEveryone(ask);
+        messageEveryone(ask);
 
         for (int j = 0; j < 4; j++) {
             String opt = Integer.toString(j + 1) + ") " + all.get(j) + '\n';
-            this.messageEveryone(opt);
+            messageEveryone(opt);
         }
 
-        this.messageEveryone(Utils.ANSWER_TIME);
+        messageEveryone(Utils.ANSWER_TIME);
 
         try {
-            Thread.sleep(10000); // wait for 5 seconds
+            Thread.sleep(10000); // wait for 10 seconds
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
 
         for (Player play : players) {
-            Socket playerSocket = play.getClientSocket();
-            Utils.sendMessage(playerSocket,Utils.END_ROUND);
-            String answer = Utils.readResponse(playerSocket);
-            if(Objects.equals(answer, "-1")) {
-                Utils.sendMessage(playerSocket, "Wrong Answer!!");
-                continue;
-            }
-            int answerIdx = Integer.parseInt(answer);
+            Thread playerThread = new Thread(() -> {
+                Socket playerSocket = play.getClientSocket();
+                Utils.sendMessage(playerSocket, Utils.END_ROUND);
+                String answer = Utils.readResponse(playerSocket);
+                if (Objects.equals(answer, "-1")) {
+                    Utils.sendMessage(playerSocket, "Wrong Answer!!");
+                    return;
+                }
+                int answerIdx = Integer.parseInt(answer);
 
+                if (all.get(answerIdx).equals(question.getCorrectAnswer())) {
+                    Utils.sendMessage(playerSocket, "Correct Answer!!");
+                } else {
+                    Utils.sendMessage(playerSocket, "Wrong Answer!!");
+                }
+            });
+            playerThread.start();
 
-            if (all.get(answerIdx).equals(question.getCorrectAnswer())) {
-                Utils.sendMessage(playerSocket, "Correct Answer!!");
-            } else {
-                Utils.sendMessage(playerSocket, "Wrong Answer!!");
+            try {
+                playerThread.join();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         }
-
     }
     public void displayQuestions() {
         for(int i = 0; i < Utils.NUM_QUESTIONS; i++) {
@@ -118,9 +125,29 @@ public class Game extends Thread {
     }
 
     public void messageEveryone(String message) {
-        for(Player play: players) {
-            Socket socket = play.getClientSocket();
-            Utils.sendMessage(socket,message);
+        List<Thread> threads = new ArrayList<>();
+
+        for (Player player : players) {
+            Thread thread = new Thread(() -> {
+                Socket socket = player.getClientSocket();
+                Utils.sendMessage(socket, message);
+            });
+
+            thread.start();
+            threads.add(thread);
         }
+
+        // Wait for all threads to complete
+        for (Thread thread : threads) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    public void setPlayers(List<Player> players){
+        this.players = players;
     }
 }

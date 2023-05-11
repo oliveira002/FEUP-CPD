@@ -33,11 +33,15 @@ public class Server {
 
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             int i = 1;
+            int elo = 100;
             System.out.println("Server started on port " + PORT);
+            MatchMaking matchmaking = new MatchMaking(this,1000);
+            matchmaking.start();
             while(true) {
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("\n(#" + i + ") New client connected from IP: " + clientSocket.getInetAddress().getHostAddress());
-                Player player = new Player(clientSocket);
+                Player player = new Player(clientSocket,100);
+                elo += 100;
                 addToQueue(player);
                 sendMessage(clientSocket,ENQUEUE);
                 //Runnable auth = new Auth(clientSocket, this, i++);
@@ -53,8 +57,49 @@ public class Server {
         }
     }
 
-    void addToQueue(Player player) {
+    public void matchMaking() {
+        List<List<Player>> allTeams = new ArrayList<>();
+        for (Player player : waitingClients) {
+            int maxDiff = player.getQueueTime() * 5;
+            boolean added = false;
+
+            for (List<Player> team : allTeams) {
+                int teamSize = team.size();
+                int totalElo = team.stream().mapToInt(Player::getElo).sum();
+                int averageElo = totalElo / teamSize;
+                System.out.println("Team ELO:" + averageElo);
+                System.out.println("Player ELO - " + (player.getElo() - maxDiff) + " & " + (player.getElo() + maxDiff));
+
+                if (Math.abs(averageElo - player.getElo()) <= maxDiff && teamSize < MAX_PLAYERS) {
+                    team.add(player);
+                    added = true;
+                    break;
+                }
+            }
+
+            if (!added) {
+                List<Player> newTeam = new ArrayList<>();
+                newTeam.add(player);
+                allTeams.add(newTeam);
+            }
+        }
+
+        for(List<Player> gameTeam: allTeams) {
+            if(gameTeam.size() == 2) {
+                Game game = new Game();
+                game.setPlayers(gameTeam);
+                game.start();
+                for(Player play: gameTeam) {
+                    waitingClients.remove(play);
+                }
+            }
+        }
+    }
+
+    public void addToQueue(Player player) {
         waitingClients.offer(player);
+        player.startQueueTimer();
+        /*
         if (waitingClients.size() >= MAX_PLAYERS) {
             Game game = new Game();
             for (int i = 0; i < MAX_PLAYERS; i++) {
@@ -63,7 +108,7 @@ public class Server {
             }
             game.start();
             games.add(game);
-        }
+        }*/
     }
 
 
