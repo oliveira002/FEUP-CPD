@@ -4,11 +4,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.lang.management.ManagementFactory;
 import java.net.Socket;
 
 public class Utils {
-
-    static final int MAX_TRHEADS = 2;
+    static final int MAX_THREADS = ManagementFactory.getThreadMXBean().getThreadCount();
     static final int MAX_PLAYERS = 2;
     static final int NUM_QUESTIONS = 3;
     static final int QUESTION_TIME = 80000;

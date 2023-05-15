@@ -14,19 +14,20 @@ import static server.src.main.java.org.t04.g13.Utils.*;
 
 public class Server {
     private final int PORT;
+
     private final List<Game> games;
     private final Queue<Player> waitingClients;
     private ExecutorService auth_pool;
 
     public Server(int port) {
-
         this.PORT = port;
 
         games = new ArrayList<>();
         waitingClients = new ArrayDeque<>();
 
         //New thread pool with at most MAX_TRHEADS authentication attempts
-        auth_pool = Executors.newFixedThreadPool(MAX_TRHEADS);
+        auth_pool = Executors.newFixedThreadPool(MAX_THREADS);
+        System.out.println("Total Number of threads " + MAX_THREADS);
     }
 
     public void start() {
@@ -124,7 +125,6 @@ public class Server {
                 System.out.printf("Using default port: %d%n%n", port);
             }
         }
-
         Server server = new Server(port);
         server.start();
     }
