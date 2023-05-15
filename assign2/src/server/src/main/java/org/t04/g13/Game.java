@@ -2,6 +2,7 @@ package server.src.main.java.org.t04.g13;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.channels.SocketChannel;
 import java.util.*;
 
 public class Game extends Thread {
@@ -86,7 +87,7 @@ public class Game extends Thread {
 
         for (Player play : players) {
             Thread playerThread = new Thread(() -> {
-                Socket playerSocket = play.getClientSocket();
+                SocketChannel playerSocket = play.getClientSocket();
                 Utils.sendMessage(playerSocket, Utils.END_ROUND);
                 String answer = Utils.readResponse(playerSocket);
                 if (Objects.equals(answer, "-1")) {
@@ -129,7 +130,7 @@ public class Game extends Thread {
 
         for (Player player : players) {
             Thread thread = new Thread(() -> {
-                Socket socket = player.getClientSocket();
+                SocketChannel socket = player.getClientSocket();
                 Utils.sendMessage(socket, message);
             });
 

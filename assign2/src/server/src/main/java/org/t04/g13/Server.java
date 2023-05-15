@@ -2,8 +2,11 @@ package server.src.main.java.org.t04.g13;
 
 
 import java.io.*;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.util.*;
 
 import java.util.concurrent.ExecutorService;
@@ -32,15 +35,20 @@ public class Server {
 
     public void start() {
 
-        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+        try (ServerSocketChannel serverSocket = ServerSocketChannel.open()) {
+            serverSocket.socket().bind(new InetSocketAddress("localhost",PORT));
+            serverSocket.configureBlocking(false);
             int i = 1;
             int elo = 100;
             System.out.println("Server started on port " + PORT);
             MatchMaking matchmaking = new MatchMaking(this,1000);
             matchmaking.start();
             while(true) {
-                Socket clientSocket = serverSocket.accept();
-                System.out.println("\n(#" + i + ") New client connected from IP: " + clientSocket.getInetAddress().getHostAddress());
+                SocketChannel clientSocket = serverSocket.accept();
+                if(clientSocket == null){
+                    continue;
+                }
+                System.out.println("\n(#" + i + ") New client connected from IP: " + clientSocket.getRemoteAddress());
                 Player player = new Player(clientSocket,100);
                 elo += 100;
                 addToQueue(player);

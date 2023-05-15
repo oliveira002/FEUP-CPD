@@ -1,6 +1,6 @@
 package client.src.main.java.org.t04.g13;
 
-import static server.src.main.java.org.t04.g13.Utils.*;
+import static client.src.main.java.org.t04.g13.Utils.*;
 
 import java.net.*;
 import java.io.*;
@@ -106,6 +106,7 @@ public class Client {
                         if (consoleIn.ready()) {
                             String answer = consoleIn.readLine();
                             out.println(answer);
+                            out.flush();
                             answerSent = true;
                             break;
                         }
@@ -115,6 +116,7 @@ public class Client {
                     if (!answerSent) {
                         System.out.println("Time's up! Sending default answer...");
                         out.println("-1");
+                        out.flush();
                     }
                 }
                 else if(message.equals("END_ROUND")) {

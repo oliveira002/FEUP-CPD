@@ -2,16 +2,17 @@ package server.src.main.java.org.t04.g13;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.channels.SocketChannel;
 
 import static server.src.main.java.org.t04.g13.Utils.*;
 
 public class Auth implements Runnable{
 
-    Socket clientSocket;
+    SocketChannel clientSocket;
     Server server;
     int i;
 
-    public Auth(Socket clientSocket, Server server, int i){
+    public Auth(SocketChannel clientSocket, Server server, int i){
         this.clientSocket = clientSocket;
         this.server = server;
         this.i = i;

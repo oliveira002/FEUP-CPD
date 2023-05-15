@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.channels.SocketChannel;
 import java.util.*;
 
 public class Player {
@@ -17,13 +18,13 @@ public class Player {
     private int queueTime = 0;
     private int elo = 0;
 
-    private Socket clientSocket;
+    private SocketChannel clientSocket;
 
-    public Player(Socket socket) {
+    public Player(SocketChannel socket) {
         this.clientSocket = socket;
     }
 
-    public Player(Socket socket, int elo) {
+    public Player(SocketChannel socket, int elo) {
         this.clientSocket = socket;
         this.elo = elo;
     }
@@ -46,7 +47,7 @@ public class Player {
         return elo;
     }
 
-    public Socket getClientSocket() {
+    public SocketChannel getClientSocket() {
         return this.clientSocket;
     }
 
