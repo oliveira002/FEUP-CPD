@@ -87,7 +87,7 @@ public class Client {
     private void credentialsMenu() throws IOException, InterruptedException {
 
         Scanner scanner = new Scanner(System.in);
-        System.out.println("------ " + (state == UserState.REGISTER ? "Register" : "Log in") + " ------");
+        System.out.println("\n------ " + (state == UserState.REGISTER ? "Register" : "Log in") + " ------");
 
         System.out.println("Username: ");
         String username = scanner.nextLine();
@@ -113,7 +113,7 @@ public class Client {
 
         Scanner scanner = new Scanner(System.in);
 
-        System.out.print(Utils.queueMenu);
+        System.out.print("\n"+Utils.queueMenu);
         String option = scanner.nextLine();
 
         sendData(option, socketChannel);
@@ -178,7 +178,7 @@ public class Client {
             elapsedTime = System.currentTimeMillis() - startTime;
         }
 
-        System.out.println("Time's up! Submitting answers.");
+        System.out.println((answer.isEmpty()? "\n" : "") + "Time's up! Submitting answers.");
 
         answer = answer.isEmpty() ? DEFAULT_ANSWER : answer;
         answerTime = answerTime == 0 ? ANSWER_TIMEOUT_SECONDS * 1000L : answerTime;

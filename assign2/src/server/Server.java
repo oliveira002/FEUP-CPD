@@ -24,8 +24,8 @@ public class Server {
     private ServerSocketChannel serverSocketChannel;
     private Selector selector;
     private Map<SocketChannel, User> connectedClients = new HashMap<SocketChannel, User>();
-    private Deque<User> normalQueue = new ArrayDeque<>(); // TODO: lock queue
-    private Deque<User> rankedQueue = new ArrayDeque<>(); // TODO: lock queue
+    private Deque<User> normalQueue = new ArrayDeque<>();
+    private Deque<User> rankedQueue = new ArrayDeque<>();
     private final Object normalQueueLock = new Object();
     private final Object rankedQueueLock = new Object();
     private final Object connectedClientsLock = new Object();

@@ -5,3 +5,6 @@ boas3,boas,500
 boas4,boas,500
 a,a,500
 s,s,500
+ko,123,500
+ol,1,500
+ola,123,500

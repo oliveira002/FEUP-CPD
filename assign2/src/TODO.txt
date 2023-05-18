@@ -1,4 +1,3 @@
-
 - Lock connectedClients, MAYBE???
 - Check if user already logged in when log in
 - If player state == LOST_CONNECTION keep him in queue for 5 secs then remove him.
