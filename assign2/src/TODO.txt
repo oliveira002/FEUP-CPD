@@ -1,0 +1,10 @@
+
+- Lock connectedClients, MAYBE???
+- Check if user already logged in when log in
+- If player state == LOST_CONNECTION keep him in queue for 5 secs then remove him.
+- When server stops, clients don't know
+- Comentar codigo
+- User input for hostname and port
+- Send token when authenticated
+- When server force disconnects, client crashes
+- Handle user disconnect mid game

@@ -1,0 +1,7 @@
+cptappl,bigsur,500
+boasasda,boasda,500
+boas2,boas,500
+boas3,boas,500
+boas4,boas,500
+a,a,500
+s,s,500

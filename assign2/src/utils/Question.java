@@ -1,14 +1,13 @@
-package server.src.main.java.org.t04.g13;
+package utils;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class Question {
-    private String question;
+    private final String question;
 
-    private List<String> choices;
-    private String answer;
+    private final List<String> choices;
+    private final String answer;
 
     public Question(String question, String answer1, String answer2, String answer3, String answer4, String answer) {
         this.question = question;

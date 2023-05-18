@@ -1,0 +1,16 @@
+package utils;
+
+public enum UserState {
+    CONNECTED,
+    LOGIN,
+    REGISTER,
+    AUTHENTICATED,
+    NORMAL_QUEUE,
+    RANKED_QUEUE,
+    IN_GAME,
+    WAITING_QUESTION,
+    SENDING_ANSWER,
+    GAME_ENDED,
+    LOST_CONNECTION,
+    DISCONNECTED,
+}
