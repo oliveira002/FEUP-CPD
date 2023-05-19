@@ -1,12 +1,11 @@
 package utils;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -238,4 +237,66 @@ public class Utils {
     public static boolean isAnswerCorrect(String response){
         return response.startsWith("[CORRECT]");
     }
+
+    /**
+     * Updates the elo of a user player.
+     * @param file The file where the user's information is stored.
+     * @param username The username of the user which elo's going to be updated.
+     * @param newELO The new elo.
+     */
+    public static void updatePlayerELO(String file, String username, int newELO) {
+        try {
+            File inputFile = new File(file);
+            File tempFile = new File(tempFilePath(file));
+
+            BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
+
+            List<String> linesToUpdate = new ArrayList<>();
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] data = line.split(",");
+                if (data.length >= 3 && data[0].equals(username)) {
+                    data[2] = String.valueOf(newELO); // Update the ELO value
+                    line = String.join(",", data);
+                }
+                linesToUpdate.add(line);
+            }
+
+            // Write all the updated lines to the temporary file
+            for (String updatedLine : linesToUpdate) {
+                writer.write(updatedLine);
+                writer.newLine();
+            }
+
+            // Close the readers/writers
+            reader.close();
+            writer.close();
+
+            // Replace the original file with the temporary file
+            if (inputFile.delete()) {
+                tempFile.renameTo(inputFile);
+            } else {
+                throw new IOException("Failed to update player's ELO. Unable to delete original file.");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Generates a temporary file path based on a given file path.
+     * @param filePath The original file path.
+     * @return Temporary file path ("temp_" appended to the start of the file").
+     */
+    private static String tempFilePath(String filePath) {
+        Path path = Paths.get(filePath);
+        String fileName = path.getFileName().toString();
+        String transformedFileName = "temp_" + fileName;
+        Path transformedPath = path.resolveSibling(transformedFileName);
+        return transformedPath.toString();
+    }
+
 }
+

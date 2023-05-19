@@ -20,7 +20,7 @@ import static utils.Utils.*;
 public class Server {
 
     private static final int PORT = 8000;
-    private static final String USER_CREDENTIALS = "src/server/users.txt";
+    protected static final String USER_CREDENTIALS = "src/server/users.txt";
     private ServerSocketChannel serverSocketChannel;
     private Selector selector;
     private Map<SocketChannel, User> connectedClients = new HashMap<SocketChannel, User>();
@@ -117,9 +117,6 @@ public class Server {
                             }
                             case 3 -> {
                                 client.state = UserState.DISCONNECTED;
-                                System.out.println("Client disconnected: " + socketChannel.getRemoteAddress());
-                                socketChannel.close();
-                                connectedClients.remove(socketChannel);
                             }
                         }
                     }
@@ -178,16 +175,17 @@ public class Server {
                             //Disconnect
                             case "3" -> {
                                 client.state = UserState.DISCONNECTED;
-                                System.out.println("Client disconnected: " + socketChannel.getRemoteAddress());
-                                socketChannel.close();
-                                connectedClients.remove(socketChannel);
                             }
                         }
                         client.startQueueTimer();
                     }
                     case NORMAL_QUEUE, RANKED_QUEUE, IN_GAME, WAITING_QUESTION, SENDING_ANSWER, WAITING_ANSWER_EVAL, GAME_ENDED -> {}
                     case LOST_CONNECTION -> {}
-                    case DISCONNECTED -> {}
+                    case DISCONNECTED -> {
+                        System.out.println("Client disconnected: " + socketChannel.getRemoteAddress());
+                        socketChannel.close();
+                        connectedClients.remove(socketChannel);
+                    }
                 }
             }
         } catch (SocketException e) {
@@ -222,6 +220,22 @@ public class Server {
     private void manageRankedQueue(User client) {
         rankedQueue.add(client);
         System.out.println("Client " + client.username + " joined ranked queue");
+
+        if(rankedQueue.size() >= MAX_PLAYERS){
+
+            List<User> gamePlayers = new ArrayList<>();
+
+            for(int i = 0; i < MAX_PLAYERS; i++){
+                User player = rankedQueue.poll();
+                assert player != null;
+                System.out.println(player.username + " removed from ranked queue");
+                player.state = UserState.IN_GAME;
+                player.getChannel().keyFor(selector).cancel(); //De-register selector from channel to avoid weird shenanigans
+                gamePlayers.add(player);
+            }
+
+            gamePool.execute(new Game(gamePlayers, GameType.RANKED, gameNr++));
+        }
     }
 
     public static void main(String[] args) {

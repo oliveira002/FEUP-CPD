@@ -9,3 +9,8 @@
 - Handle user disconnect mid-game
 - Re-register clients for selector after game ends, destroy game obj
 - Validate input in game
+- End game msg only after game ends
+- Gain /lose more or less elo based on opponent
+- Fechar sockets, selectors
+- If Game is queued, tell users they have to wait
+- Cancel game if players disconnect while waiting for game start (check if all players connected at the start of the game)

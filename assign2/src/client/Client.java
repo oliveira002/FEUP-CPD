@@ -139,6 +139,7 @@ public class Client {
         String[] response = readData(socketChannel);
 
         assert response != null;
+        System.out.println();
         for (String message : response) {
             if(hasGameStarted(message)){
                 state = UserState.WAITING_QUESTION;
@@ -152,6 +153,7 @@ public class Client {
         lastQuestion = false;
 
         assert response != null;
+        System.out.println();
         for (String message : response) {
             if(isLastQuestion(message)){
                 lastQuestion = true;
@@ -204,7 +206,7 @@ public class Client {
     }
 
     private void gameEnded() throws IOException {
-        System.out.println("Game has ended!");
+        System.out.println("\nGame has ended!");
 
         String[] response = readData(socketChannel);
 

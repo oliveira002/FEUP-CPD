@@ -12,6 +12,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static server.Server.USER_CREDENTIALS;
 import static utils.Utils.*;
 
 public class Game implements Runnable{
@@ -19,11 +20,11 @@ public class Game implements Runnable{
     private List<User> gamePlayers;
     private GameType gameType;
     private int gameNr;
-    private int eloGained = 0;
     private ExecutorService playersPool;
     private List<Question> allQuestions;
     private List<Question> questions = new ArrayList<>();
-    private ScheduledExecutorService answerTimer;
+    private final Object updateEloLock = new Object();
+
 
     public Game(List<User> gamePlayers, GameType gameType, int gameNr){
         this.gamePlayers = gamePlayers;
@@ -42,6 +43,7 @@ public class Game implements Runnable{
         for(User player : gamePlayers){
             playersPool.execute(() -> {
                 try {
+                    int eloGained = 0;
                     int questionNr = 0;
                     SocketChannel channel = player.getChannel();
 
@@ -78,36 +80,16 @@ public class Game implements Runnable{
                             }
                             case SENDING_ANSWER -> {
 
-                                Thread sleepThread = new Thread(() -> {
-                                    try {
-                                        Thread.sleep(11000); // Sleep for 11 seconds (11000 milliseconds)
-                                    } catch (InterruptedException e) {
-                                        // Thread interrupted
-                                        Thread.currentThread().interrupt();
-                                    }
-                                });
-
-                                sleepThread.start(); // Start the thread
-
-                                // Wait for the thread to complete
-                                try {
-                                    sleepThread.join();
-                                } catch (InterruptedException e) {
-                                    // Thread interrupted
-                                    Thread.currentThread().interrupt();
-                                }
-
-                                try {
+                                answer = readData(channel);
+                                while(answer == null){
                                     answer = readData(channel);
-                                } catch (IOException e) {
-                                    throw new RuntimeException(e);
                                 }
+
                                 player.state = UserState.WAITING_ANSWER_EVAL;
 
                             }
                             case WAITING_ANSWER_EVAL -> {
 
-                                assert answer != null;
                                 String answer_aux = answer[0];
                                 String time = answer[1];
                                 boolean isAnswerCorrect;
@@ -118,25 +100,36 @@ public class Game implements Runnable{
                                     sendData("[INCORRECT]", channel);
                                 }
                                 else{
-                                    answerChoice = Integer.parseInt(answer_aux);
+                                    answerChoice = Integer.parseInt(answer_aux)-1;
                                     isAnswerCorrect = Objects.equals(question.getAnswers().get(answerChoice), question.getCorrectAnswer());
 
                                     if(isAnswerCorrect) sendData("[CORRECT]", channel);
-                                    else sendData("[INCORRECT]", channel);
-
-                                    eloGained += calculatePoints(isAnswerCorrect, Long.parseLong(time));
-
+                                    else {
+                                        sendData("[INCORRECT]", channel);
+                                    }
                                 }
+                                eloGained += calculatePoints(isAnswerCorrect, Double.parseDouble(time)/1000.0);
 
+                                System.out.println("\nPlayer: "+player.username
+                                        +"\nAnswer: "+answer_aux
+                                        +"\nTime: "+(Double.parseDouble(time)/1000.0)
+                                        +"\nPoints: " + calculatePoints(isAnswerCorrect, Double.parseDouble(time)/1000.0)
+                                        +"\nTotal elo gained: "+eloGained);
                                 player.state = UserState.WAITING_QUESTION;
                             }
                             case GAME_ENDED -> {
-                                System.out.println("Game ended");
                                 gameEnded = true;
 
                                 if(gameType == GameType.RANKED){
                                     player.elo += eloGained;
-                                    sendData("You gained " + eloGained + "elo points this game.", channel);
+                                    if(eloGained >= 0)
+                                        sendData("You gained " + (eloGained) + " elo points this game.", channel);
+                                    else
+                                        sendData("You lost " + Math.abs(eloGained) + " elo points this game.", channel);
+
+                                    synchronized (updateEloLock){
+                                        updatePlayerELO(USER_CREDENTIALS, player.username, player.elo);
+                                    }
                                 }
                                 else sendData("This was a normal game, so you did not gain any elo points.", channel);
                                 player.state = UserState.AUTHENTICATED;
@@ -147,6 +140,18 @@ public class Game implements Runnable{
                     throw new RuntimeException(e);
                 }
             });
+        }
+
+
+        try {
+            boolean isIdle = playersPool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+
+            if(isIdle){
+                System.out.println("[END] Game #" + gameNr + " has ended");
+                //playersPool.shutdown();
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -176,13 +181,13 @@ public class Game implements Runnable{
         }
     }
 
-    private static int calculatePoints(boolean isCorrect, long timeTaken) {
+    private static int calculatePoints(boolean isCorrect, double timeTaken) {
         if (!isCorrect) {
-            return 0;
+            return (int) -2*CORRECT_ANSWER_POINTS/3;
         }
 
         // Calculate the percentage of time taken compared to the timeout duration
-        double timePercentage = (double) timeTaken / ANSWER_TIMEOUT_SECONDS;
+        double timePercentage = timeTaken / ANSWER_TIMEOUT_SECONDS;
 
         // Calculate points based on the percentage of time taken, the less time, the more points
         return (int) (CORRECT_ANSWER_POINTS + (CORRECT_ANSWER_POINTS * (1-timePercentage)));
