@@ -148,7 +148,7 @@ public class Game implements Runnable{
 
             if(isIdle){
                 System.out.println("[END] Game #" + gameNr + " has ended");
-                //playersPool.shutdown();
+                playersPool.shutdown();
             }
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
@@ -183,7 +183,7 @@ public class Game implements Runnable{
 
     private static int calculatePoints(boolean isCorrect, double timeTaken) {
         if (!isCorrect) {
-            return (int) -2*CORRECT_ANSWER_POINTS/3;
+            return -2*CORRECT_ANSWER_POINTS/3;
         }
 
         // Calculate the percentage of time taken compared to the timeout duration
