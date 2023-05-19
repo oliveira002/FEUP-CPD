@@ -54,6 +54,7 @@ public class Client {
                     case NORMAL_QUEUE, RANKED_QUEUE -> checkGameStart();
                     case WAITING_QUESTION ->  getQuestion();
                     case SENDING_ANSWER -> sendAnswer();
+                    case WAITING_ANSWER_EVAL -> answerEval();
                     case GAME_ENDED -> gameEnded();
                 }
 
@@ -184,14 +185,34 @@ public class Client {
         answerTime = answerTime == 0 ? ANSWER_TIMEOUT_SECONDS * 1000L : answerTime;
         sendData(answer +"&&"+ answerTime, socketChannel);
 
+        state = UserState.WAITING_ANSWER_EVAL;
+    }
+
+    private void answerEval() throws IOException {
+
+        String[] response = readData(socketChannel);
+
+        assert response != null;
+        for (String message : response) {
+            System.out.println(isAnswerCorrect(message)? "Correct answer!" : "Incorrect answer!");
+        }
+
         if(lastQuestion)
             state = UserState.GAME_ENDED;
         else
             state = UserState.WAITING_QUESTION;
     }
 
-    private void gameEnded(){
+    private void gameEnded() throws IOException {
         System.out.println("Game has ended!");
+
+        String[] response = readData(socketChannel);
+
+        assert response != null;
+        for (String message : response) {
+            System.out.println(message);
+        }
+
         state = UserState.AUTHENTICATED;
     }
 

@@ -6,10 +6,7 @@ import utils.UserState;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.Scanner;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -21,21 +18,26 @@ public class Game implements Runnable{
     private static final String QUESTIONS = "src/server/questions.txt";
     private List<User> gamePlayers;
     private GameType gameType;
+    private int gameNr;
+    private int eloGained = 0;
     private ExecutorService playersPool;
     private List<Question> allQuestions;
     private List<Question> questions = new ArrayList<>();
     private ScheduledExecutorService answerTimer;
 
-    public Game(List<User> gamePlayers, GameType gameType){
+    public Game(List<User> gamePlayers, GameType gameType, int gameNr){
         this.gamePlayers = gamePlayers;
         this.gameType = gameType;
         this.playersPool = Executors.newFixedThreadPool(gamePlayers.size());
         this.allQuestions = getQuestionsFromDB(QUESTIONS);
+        this.gameNr = gameNr;
     }
 
     @Override
     public void run() {
         generateGameQuestions();
+
+        System.out.println("[START] Game #" + gameNr + " has started with players:");
 
         for(User player : gamePlayers){
             playersPool.execute(() -> {
@@ -43,23 +45,25 @@ public class Game implements Runnable{
                     int questionNr = 0;
                     SocketChannel channel = player.getChannel();
 
-                    System.out.println("[START] Game has started for player: " + player.username);
+                    System.out.println(player.username);
                     sendData("[START] Game has started, you have " + ANSWER_TIMEOUT_SECONDS + " seconds to answer each question, with a total of " + MAX_QUESTIONS + " questions.", channel);
 
                     player.state = UserState.WAITING_QUESTION;
 
                     boolean gameEnded = false;
+                    String[] answer = new String[1];
+                    answer[0] = "ola";
+                    Question question = new Question(null, null, null, null,null,null);
                     while (!gameEnded) {
                         switch (player.state) {
                             case WAITING_QUESTION -> {
 
                                 if(questionNr == MAX_QUESTIONS){
-                                    gameEnded = true;
-                                    player.state = UserState.AUTHENTICATED;
-                                    break;
+                                    player.state = UserState.GAME_ENDED;
+                                    continue;
                                 }
 
-                                Question question = questions.get(questionNr++);
+                                question = questions.get(questionNr++);
 
                                 StringBuilder questionMsg = new StringBuilder("[QUESTION " + (questionNr) + "] " + question.getQuestion() + "&&");
                                 int ansNr = 1;
@@ -74,24 +78,68 @@ public class Game implements Runnable{
                             }
                             case SENDING_ANSWER -> {
 
-                                answerTimer = Executors.newSingleThreadScheduledExecutor();
-
-                                answerTimer.schedule(() -> {
-                                    String[] answer;
+                                Thread sleepThread = new Thread(() -> {
                                     try {
-                                        answer = readData(channel);
-                                    } catch (IOException e) {
-                                        throw new RuntimeException(e);
+                                        Thread.sleep(11000); // Sleep for 11 seconds (11000 milliseconds)
+                                    } catch (InterruptedException e) {
+                                        // Thread interrupted
+                                        Thread.currentThread().interrupt();
                                     }
-                                    assert answer != null;
-                                    for (String aux : answer){
-                                        System.out.println(aux);
-                                    }
+                                });
 
-                                    player.state = UserState.WAITING_QUESTION;
+                                sleepThread.start(); // Start the thread
 
-                                }, ANSWER_TIMEOUT_SECONDS+1, TimeUnit.SECONDS);
+                                // Wait for the thread to complete
+                                try {
+                                    sleepThread.join();
+                                } catch (InterruptedException e) {
+                                    // Thread interrupted
+                                    Thread.currentThread().interrupt();
+                                }
 
+                                try {
+                                    answer = readData(channel);
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                                player.state = UserState.WAITING_ANSWER_EVAL;
+
+                            }
+                            case WAITING_ANSWER_EVAL -> {
+
+                                assert answer != null;
+                                String answer_aux = answer[0];
+                                String time = answer[1];
+                                boolean isAnswerCorrect;
+                                int answerChoice;
+
+                                if(Objects.equals(answer_aux, "NULL")){
+                                    isAnswerCorrect = false;
+                                    sendData("[INCORRECT]", channel);
+                                }
+                                else{
+                                    answerChoice = Integer.parseInt(answer_aux);
+                                    isAnswerCorrect = Objects.equals(question.getAnswers().get(answerChoice), question.getCorrectAnswer());
+
+                                    if(isAnswerCorrect) sendData("[CORRECT]", channel);
+                                    else sendData("[INCORRECT]", channel);
+
+                                    eloGained += calculatePoints(isAnswerCorrect, Long.parseLong(time));
+
+                                }
+
+                                player.state = UserState.WAITING_QUESTION;
+                            }
+                            case GAME_ENDED -> {
+                                System.out.println("Game ended");
+                                gameEnded = true;
+
+                                if(gameType == GameType.RANKED){
+                                    player.elo += eloGained;
+                                    sendData("You gained " + eloGained + "elo points this game.", channel);
+                                }
+                                else sendData("This was a normal game, so you did not gain any elo points.", channel);
+                                player.state = UserState.AUTHENTICATED;
                             }
                         }
                     }
@@ -128,8 +176,16 @@ public class Game implements Runnable{
         }
     }
 
-    private void sendQuestion(){
+    private static int calculatePoints(boolean isCorrect, long timeTaken) {
+        if (!isCorrect) {
+            return 0;
+        }
 
+        // Calculate the percentage of time taken compared to the timeout duration
+        double timePercentage = (double) timeTaken / ANSWER_TIMEOUT_SECONDS;
+
+        // Calculate points based on the percentage of time taken, the less time, the more points
+        return (int) (CORRECT_ANSWER_POINTS + (CORRECT_ANSWER_POINTS * (1-timePercentage)));
     }
 
 }

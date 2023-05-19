@@ -30,6 +30,7 @@ public class Server {
     private final Object rankedQueueLock = new Object();
     private final Object connectedClientsLock = new Object();
     private ExecutorService gamePool;
+    private int gameNr = 1;
 
     public Server() {
         try{
@@ -184,7 +185,7 @@ public class Server {
                         }
                         client.startQueueTimer();
                     }
-                    case NORMAL_QUEUE, RANKED_QUEUE, IN_GAME, WAITING_QUESTION, SENDING_ANSWER -> {}
+                    case NORMAL_QUEUE, RANKED_QUEUE, IN_GAME, WAITING_QUESTION, SENDING_ANSWER, WAITING_ANSWER_EVAL, GAME_ENDED -> {}
                     case LOST_CONNECTION -> {}
                     case DISCONNECTED -> {}
                 }
@@ -214,7 +215,7 @@ public class Server {
                 gamePlayers.add(player);
             }
 
-            gamePool.execute(new Game(gamePlayers, GameType.NORMAL));
+            gamePool.execute(new Game(gamePlayers, GameType.NORMAL, gameNr++));
         }
     }
 

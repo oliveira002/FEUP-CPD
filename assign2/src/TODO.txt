@@ -6,4 +6,6 @@
 - User input for hostname and port
 - Send token when authenticated
 - When server force disconnects, client crashes
-- Handle user disconnect mid game
+- Handle user disconnect mid-game
+- Re-register clients for selector after game ends, destroy game obj
+- Validate input in game
