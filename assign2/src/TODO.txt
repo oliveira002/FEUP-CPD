@@ -15,4 +15,4 @@
 
 Think about:
 - Lock connectedClients ??
-- Lock gamePool.execute() ?? -> If there's
+- Lock gamePool.execute() ?? -> If there's two games starting at the same time and pool has 1 free thread

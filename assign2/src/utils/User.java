@@ -13,6 +13,7 @@ public class User {
     public int elo;
     public UserState state;
     private int queueTime = 0;
+    private Timer timer;
 
     public User(){
         state = UserState.CONNECTED;
@@ -26,7 +27,7 @@ public class User {
     }
 
     public void startQueueTimer() {
-        Timer timer = new Timer();
+        timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
@@ -37,6 +38,10 @@ public class User {
 
     public int getQueueTime() {
         return queueTime;
+    }
+
+    public void stopQueueTime(){
+        timer.cancel();
     }
 
     public SocketChannel getChannel(){
@@ -52,4 +57,7 @@ public class User {
         return "Username: " + username + "\nElo: " + elo + "\nState: " + state;
     }
 
+    public int getElo() {
+        return this.elo;
+    }
 }

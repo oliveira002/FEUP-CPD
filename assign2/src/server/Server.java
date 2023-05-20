@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+
 import static utils.Utils.*;
 
 
@@ -22,11 +23,12 @@ public class Server implements GameEndCallback {
     private Selector selector;
     private Map<SocketChannel, User> connectedClients = new HashMap<SocketChannel, User>();
     private Deque<User> normalQueue = new ArrayDeque<>();
-    private Deque<User> rankedQueue = new ArrayDeque<>();
+    private List<User> rankedQueue = new ArrayList<>();
     private final Object normalQueueLock = new Object();
     private final Object rankedQueueLock = new Object();
     private final Object connectedClientsLock = new Object();
     private ExecutorService gamePool;
+    private final ExecutorService rankedMMPool = Executors.newSingleThreadExecutor();
     private int gameNr = 1;
 
     public Server() {
@@ -52,6 +54,9 @@ public class Server implements GameEndCallback {
      */
     public void start(){
         try {
+            RankedMatchmaking rankedMatchmaking = new RankedMatchmaking(this);
+            rankedMMPool.execute(rankedMatchmaking);
+
             while (true) {
                 selector.select();
                 Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
@@ -61,7 +66,6 @@ public class Server implements GameEndCallback {
                     iterator.remove();
 
                     if (key.isValid()) {
-                        System.out.println("TRY");
                         if (key.isAcceptable()) {
                             acceptConnection(key);
                         } else if (key.isReadable()) {
@@ -159,7 +163,6 @@ public class Server implements GameEndCallback {
 
                     }
                     case AUTHENTICATED -> {
-                        System.out.println("BOAS AUTH");
                         switch (message){
                             //Normal queue
                             case "1" -> {
@@ -184,7 +187,6 @@ public class Server implements GameEndCallback {
                                 connectedClients.remove(socketChannel);
                             }
                         }
-                        client.startQueueTimer();
                     }
                     case NORMAL_QUEUE, RANKED_QUEUE, IN_GAME, DISCONNECTED -> {}
                     case LOST_CONNECTION -> {}
@@ -200,6 +202,7 @@ public class Server implements GameEndCallback {
 
     private void manageNormalQueue(User client) {
         normalQueue.add(client);
+        client.startQueueTimer();
         System.out.println("Client " + client.username + " joined normal queue");
 
         if(normalQueue.size() >= MAX_PLAYERS){
@@ -229,9 +232,10 @@ public class Server implements GameEndCallback {
 
     private void manageRankedQueue(User client) {
         rankedQueue.add(client);
+        client.startQueueTimer();
         System.out.println("Client " + client.username + " joined ranked queue");
 
-        if(rankedQueue.size() >= MAX_PLAYERS){
+        /*if(rankedQueue.size() >= MAX_PLAYERS){
 
             List<User> gamePlayers = new ArrayList<>();
 
@@ -253,7 +257,60 @@ public class Server implements GameEndCallback {
             Game game = new Game(gamePlayers, GameType.NORMAL, gameNr++);
             game.setGameEndCallback(this); // 'this' refers to the current Server instance
             gamePool.execute(game);
+        }*/
+    }
+
+    public void rankedMatchMaking() {
+
+        /*List<List<User>> allTeams = new ArrayList<>();
+        for (User player : rankedQueue) {
+            if(!player.getChannel().isConnected()) {
+                continue;
+            }
+            int maxDiff = player.getQueueTime() * 5;
+            boolean added = false;
+
+            for (List<User> team : allTeams) {
+                int teamSize = team.size();
+                int totalElo = team.stream().mapToInt(User::getElo).sum();
+                int averageElo = totalElo / teamSize;
+                System.out.println("Team ELO:" + averageElo);
+                System.out.println("Player ELO - " + (player.getElo() - maxDiff) + " & " + (player.getElo() + maxDiff));
+
+                if (Math.abs(averageElo - player.getElo()) <= maxDiff && teamSize < MAX_PLAYERS) {
+                    team.add(player);
+                    added = true;
+                    break;
+                }
+            }
+
+            if (!added) {
+                List<User> newTeam = new ArrayList<>();
+                newTeam.add(player);
+                allTeams.add(newTeam);
+            }
         }
+
+        for (List<User> gameTeam : allTeams) {
+            if (gameTeam.size() == MAX_PLAYERS) {
+                Game game = new Game(gameTeam, GameType.RANKED, gameNr++);
+                game.setGameEndCallback(this); // 'this' refers to the current Server instance
+                gamePool.execute(game);
+                for (User player : gameTeam) {
+                    player.state = UserState.IN_GAME;
+
+                    SelectionKey key = player.getChannel().keyFor(selector);
+                    if (key.isValid()) {
+                        int ops = key.interestOps();
+                        ops &= ~SelectionKey.OP_READ;
+                        key.interestOps(ops);
+                    }
+                    player.stopQueueTime();
+                    rankedQueue.remove(player);
+                }
+            }
+        }*/
+
     }
 
     @Override
@@ -282,4 +339,5 @@ public class Server implements GameEndCallback {
         Server server = new Server();
         server.start();
     }
+
 }

@@ -18,6 +18,11 @@ public class Utils {
     public static int ANSWER_TIMEOUT_SECONDS = 4;
     public static int CORRECT_ANSWER_POINTS = 5;
     public static int MAX_LOSS_CONNECTION_TIME_SECONDS = 5;
+    public static int MAX_ELO_DIFF = 50;
+    public static int MAX_WAITING_TIME_SECONDS = 10;
+    public static int ELO_RELAX_FACTOR = 5;
+    public static int WAITING_TIME_RELAX_FACTOR_SECONDS = 5;
+
     public static String authMenu =
         """
         ------ Authentication ------
