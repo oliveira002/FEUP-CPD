@@ -6,10 +6,7 @@ import utils.UserState;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
+import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,7 +14,7 @@ import java.util.concurrent.Executors;
 import static utils.Utils.*;
 
 
-public class Server {
+public class Server implements GameEndCallback {
 
     private static final int PORT = 8000;
     protected static final String USER_CREDENTIALS = "src/server/users.txt";
@@ -64,6 +61,7 @@ public class Server {
                     iterator.remove();
 
                     if (key.isValid()) {
+                        System.out.println("TRY");
                         if (key.isAcceptable()) {
                             acceptConnection(key);
                         } else if (key.isReadable()) {
@@ -117,6 +115,10 @@ public class Server {
                             }
                             case 3 -> {
                                 client.state = UserState.DISCONNECTED;
+                                System.out.println("Client disconnected: " + socketChannel.getRemoteAddress());
+                                socketChannel.keyFor(selector).cancel();
+                                socketChannel.close();
+                                connectedClients.remove(socketChannel);
                             }
                         }
                     }
@@ -157,6 +159,7 @@ public class Server {
 
                     }
                     case AUTHENTICATED -> {
+                        System.out.println("BOAS AUTH");
                         switch (message){
                             //Normal queue
                             case "1" -> {
@@ -175,17 +178,18 @@ public class Server {
                             //Disconnect
                             case "3" -> {
                                 client.state = UserState.DISCONNECTED;
+                                System.out.println("Client disconnected: " + socketChannel.getRemoteAddress());
+                                socketChannel.keyFor(selector).cancel();
+                                socketChannel.close();
+                                connectedClients.remove(socketChannel);
                             }
                         }
                         client.startQueueTimer();
                     }
-                    case NORMAL_QUEUE, RANKED_QUEUE, IN_GAME, WAITING_QUESTION, SENDING_ANSWER, WAITING_ANSWER_EVAL, GAME_ENDED -> {}
+                    case NORMAL_QUEUE, RANKED_QUEUE -> {}
+                    case IN_GAME -> {}
                     case LOST_CONNECTION -> {}
-                    case DISCONNECTED -> {
-                        System.out.println("Client disconnected: " + socketChannel.getRemoteAddress());
-                        socketChannel.close();
-                        connectedClients.remove(socketChannel);
-                    }
+                    case DISCONNECTED -> {}
                 }
             }
         } catch (SocketException e) {
@@ -209,11 +213,21 @@ public class Server {
                 assert player != null;
                 System.out.println(player.username + " removed from normal queue");
                 player.state = UserState.IN_GAME;
-                player.getChannel().keyFor(selector).cancel(); //De-register selector from channel to avoid weird shenanigans
+
+                SelectionKey key = player.getChannel().keyFor(selector);
+                if (key.isValid()) {
+                    int ops = key.interestOps();
+                    ops &= ~SelectionKey.OP_READ;
+                    key.interestOps(ops);
+                }
+
+                //player.getChannel().keyFor(selector).cancel(); //De-register selector from channel to avoid weird shenanigans
                 gamePlayers.add(player);
             }
 
-            gamePool.execute(new Game(gamePlayers, GameType.NORMAL, gameNr++));
+            Game game = new Game(gamePlayers, GameType.NORMAL, gameNr++);
+            game.setGameEndCallback(this); // 'this' refers to the current Server instance
+            gamePool.execute(game);
         }
     }
 
@@ -230,11 +244,41 @@ public class Server {
                 assert player != null;
                 System.out.println(player.username + " removed from ranked queue");
                 player.state = UserState.IN_GAME;
-                player.getChannel().keyFor(selector).cancel(); //De-register selector from channel to avoid weird shenanigans
+
+                SelectionKey key = player.getChannel().keyFor(selector);
+                if (key.isValid()) {
+                    int ops = key.interestOps();
+                    ops &= ~SelectionKey.OP_READ;
+                    key.interestOps(ops);
+                }
+
                 gamePlayers.add(player);
             }
+            Game game = new Game(gamePlayers, GameType.NORMAL, gameNr++);
+            game.setGameEndCallback(this); // 'this' refers to the current Server instance
+            gamePool.execute(game);
+        }
+    }
 
-            gamePool.execute(new Game(gamePlayers, GameType.RANKED, gameNr++));
+    @Override
+    public void onGameEnd(Game game) throws ClosedChannelException {
+        System.out.println("\n[END] Game #" + game.getGameNr() + " has ended");
+        List<User> gamePlayers = game.getGamePlayers();
+        for (User player : gamePlayers){
+            player.state = UserState.AUTHENTICATED;
+            SocketChannel playerChannel = player.getChannel();
+            SelectionKey key = player.getChannel().keyFor(selector);
+            if(key.isValid()) {
+                int ops = key.interestOps();
+                ops |= SelectionKey.OP_READ;
+                key.interestOps(ops);
+                User temp = connectedClients.get(playerChannel);
+                connectedClients.replace(playerChannel, temp, player);
+                selector.wakeup();
+            }
+            else{
+                connectedClients.remove(playerChannel);
+            }
         }
     }
 

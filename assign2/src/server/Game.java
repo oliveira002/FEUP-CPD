@@ -5,12 +5,11 @@ import utils.User;
 import utils.UserState;
 
 import java.io.IOException;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SocketChannel;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static server.Server.USER_CREDENTIALS;
 import static utils.Utils.*;
@@ -24,6 +23,7 @@ public class Game implements Runnable{
     private List<Question> allQuestions;
     private List<Question> questions = new ArrayList<>();
     private final Object updateEloLock = new Object();
+    private GameEndCallback gameEndCallback;
 
 
     public Game(List<User> gamePlayers, GameType gameType, int gameNr){
@@ -39,6 +39,9 @@ public class Game implements Runnable{
         generateGameQuestions();
 
         System.out.println("[START] Game #" + gameNr + " has started with players:");
+
+        final AtomicInteger activeThreads = new AtomicInteger(gamePlayers.size());
+        final Semaphore semaphore = new Semaphore(0);
 
         for(User player : gamePlayers){
             playersPool.execute(() -> {
@@ -139,18 +142,23 @@ public class Game implements Runnable{
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
+
+                if (activeThreads.decrementAndGet() == 0) {
+                    semaphore.release(); // Release the semaphore when all threads have completed
+                }
             });
         }
 
+        try {
+            semaphore.acquire(); // Wait until all threads complete
+            playersPool.shutdown();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
 
         try {
-            boolean isIdle = playersPool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-
-            if(isIdle){
-                System.out.println("[END] Game #" + gameNr + " has ended");
-                playersPool.shutdown();
-            }
-        } catch (InterruptedException e) {
+            gameEnd();
+        } catch (ClosedChannelException e) {
             throw new RuntimeException(e);
         }
     }
@@ -191,6 +199,26 @@ public class Game implements Runnable{
 
         // Calculate points based on the percentage of time taken, the less time, the more points
         return (int) (CORRECT_ANSWER_POINTS + (CORRECT_ANSWER_POINTS * (1-timePercentage)));
+    }
+
+    public List<User> getGamePlayers(){
+        return gamePlayers;
+    }
+
+    public void setGameEndCallback(GameEndCallback callback) {
+        this.gameEndCallback = callback;
+    }
+
+    private void gameEnd() throws ClosedChannelException {
+        // Perform any necessary clean-up or post-game actions
+
+        if (gameEndCallback != null) {
+            gameEndCallback.onGameEnd(this);
+        }
+    }
+
+    public int getGameNr(){
+        return gameNr;
     }
 
 }

@@ -15,7 +15,7 @@ public class Utils {
     public static int MAX_GAMES = 2;
     public static int MAX_PLAYERS = 2;
     public static int MAX_QUESTIONS = 3;
-    public static int ANSWER_TIMEOUT_SECONDS = 15;
+    public static int ANSWER_TIMEOUT_SECONDS = 4;
     public static int CORRECT_ANSWER_POINTS = 5;
     public static String authMenu =
         """
