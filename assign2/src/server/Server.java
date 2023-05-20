@@ -186,10 +186,8 @@ public class Server implements GameEndCallback {
                         }
                         client.startQueueTimer();
                     }
-                    case NORMAL_QUEUE, RANKED_QUEUE -> {}
-                    case IN_GAME -> {}
+                    case NORMAL_QUEUE, RANKED_QUEUE, IN_GAME, DISCONNECTED -> {}
                     case LOST_CONNECTION -> {}
-                    case DISCONNECTED -> {}
                 }
             }
         } catch (SocketException e) {
@@ -220,8 +218,6 @@ public class Server implements GameEndCallback {
                     ops &= ~SelectionKey.OP_READ;
                     key.interestOps(ops);
                 }
-
-                //player.getChannel().keyFor(selector).cancel(); //De-register selector from channel to avoid weird shenanigans
                 gamePlayers.add(player);
             }
 

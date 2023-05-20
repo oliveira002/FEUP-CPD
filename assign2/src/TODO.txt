@@ -1,15 +1,18 @@
-- Lock connectedClients, MAYBE???
-- Check if user already logged in when log in
-- If player state == LOST_CONNECTION keep him in queue for 5 secs then remove him.
-- When server stops, clients don't know
-- Comentar codigo
-- User input for hostname and port
-- Send token when authenticated
-- When server force disconnects, client crashes
-- Handle user disconnect mid-game
+- Ranked matchmaking algorithm (relaxing elo as time passes without conditions for a game to start)
+- When client logs in, server sends him a unique token that can be used to relog without credentials (When user connects to server, check if there's an entry in token.txt that's valid and send it)
+- If player.state == LOST_CONNECTION keep him in queue for 5 secs then remove him if he doesn't reconnect in time.
+- Check if user is already logged in when there's an attempt to log in.
 - Validate input in client (Auth menu, game mode menu, answers in game)
 - Gain/lose more or less elo based on opponent elo
-- Fechar sockets, selectors
-- If Game is queued, tell users they have to wait
 - Cancel game if players disconnect while waiting for game start (check if all players connected at the start of the game)
-- Ranked matchmaking algorithm
+- User input for hostname and port (command args)
+- When server stops, clients maybe crash or maybe continue running until communication attempt is made, handle exceptions and tell client server is offline.
+- If Game is queued, tell users they have to wait
+- Handle user disconnects mid-game, game keeps running, disconnected player get all remaining answers wrong and his elo is updated
+- Comentar codigo
+- Fechar sockets, selectors, etc
+- STRESS TEST
+
+Think about:
+- Lock connectedClients ??
+- Lock gamePool.execute() ?? -> If there's
