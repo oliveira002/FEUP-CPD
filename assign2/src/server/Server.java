@@ -181,9 +181,9 @@ public class Server implements GameEndCallback {
                         if(username == null){return;}
 
                         revokeToken(TOKENS, username);
-
                         User tempClient = getUserFromListByUsername(lostConnectionClients, username);
                         assert tempClient != null;
+                        tempClient.stopLossConnectionTime();
                         tempClient.state = UserState.WAITING_TOKEN_RESPONSE;
                         lostConnectionClients.remove(tempClient);
                         connectedClients.put(socketChannel, tempClient);
@@ -202,21 +202,22 @@ public class Server implements GameEndCallback {
                         UserState state_aux = getUserQueue(client);
 
                         if(state_aux == null) {
+                            client.state = UserState.AUTHENTICATED;
                             sendData("[QUEUE_SELECT]", socketChannel);
                         }
                         else if (state_aux == UserState.NORMAL_QUEUE) {
+                            client.state = UserState.NORMAL_QUEUE;
                             System.out.println("Client " + client.username + " rejoined normal queue");
                             sendData("[NORMAL]", socketChannel);
                             updateNormalQueue(client);
                             handleNormalQueue();
                         }
                         else if (state_aux == UserState.RANKED_QUEUE) {
+                            client.state = UserState.RANKED_QUEUE;
                             System.out.println("Client " + client.username + " rejoined ranked queue");
                             sendData("[RANKED]", socketChannel);
                             updateRankedQueue(client);
                         }
-
-                        client.state = Objects.requireNonNullElse(state_aux, UserState.AUTHENTICATED);
                     }
                     case AUTHENTICATED -> {
                         switch (message){

@@ -17,7 +17,8 @@ public class User {
     public UserState state;
     private int queueTime = 0;
     private int lossConnectionTime = 0;
-    private Timer timer;
+    private Timer timerQueue;
+    private Timer timerDisconnect;
 
     public User(){
         state = UserState.CONNECTED;
@@ -33,8 +34,8 @@ public class User {
     }
 
     public void startQueueTimer() {
-        timer = new Timer();
-        timer.scheduleAtFixedRate(new TimerTask() {
+        timerQueue = new Timer();
+        timerQueue.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 queueTime++;
@@ -45,10 +46,14 @@ public class User {
     public int getQueueTime() {
         return queueTime;
     }
+    public void stopQueueTime(){
+        queueTime = 0;
+        timerQueue.cancel();
+    }
 
     public void startLossConectionTimer(){
-        timer = new Timer();
-        timer.scheduleAtFixedRate(new TimerTask() {
+        timerDisconnect = new Timer();
+        timerDisconnect.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 lossConnectionTime++;
@@ -59,10 +64,11 @@ public class User {
     public int getLossConnectionTime() {
         return lossConnectionTime;
     }
-
-    public void stopQueueTime(){
-        timer.cancel();
+    public void stopLossConnectionTime(){
+        lossConnectionTime = 0;
+        timerDisconnect.cancel();
     }
+
 
     public SocketChannel getChannel(){
         return this.channel;

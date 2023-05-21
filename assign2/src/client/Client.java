@@ -157,6 +157,7 @@ public class Client {
 
         assert response != null;
         for (String message : response) {
+            System.out.println(message);
             if(message.startsWith("[QUEUE_SELECT]")) state = UserState.AUTHENTICATED;
             else if(message.startsWith("[NORMAL]")) state = UserState.NORMAL_QUEUE;
             else if(message.startsWith("[RANKED]")) state = UserState.RANKED_QUEUE;
