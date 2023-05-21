@@ -115,6 +115,9 @@ public class Client {
 
     private void tokenLogin() throws IOException{
 
+        System.out.println("\n------ Token Login ------");
+        System.out.print("Token: ");
+
     }
 
     private void getToken() throws IOException{

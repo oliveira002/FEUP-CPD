@@ -166,7 +166,7 @@ public class Server implements GameEndCallback {
 
                     }
                     case TOKEN_LOGIN -> {
-                       System.out.println("Boas2");
+
                     }
                     case TOKEN_GEN -> {
                         UUID uuid = UUID.randomUUID();
@@ -210,7 +210,7 @@ public class Server implements GameEndCallback {
             client.state = UserState.LOST_CONNECTION;
             System.out.println("Client lost connection: " + socketChannel.getRemoteAddress());
             socketChannel.close();
-            connectedClients.remove(socketChannel);
+            //connectedClients.remove(socketChannel);
         }
     }
 
