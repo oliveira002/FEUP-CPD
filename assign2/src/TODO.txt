@@ -1,5 +1,4 @@
 - Ranked matchmaking algorithm (relaxing elo as time passes without conditions for a game to start) -> FUCKING SCUFFED
-- If player.state == LOST_CONNECTION keep him in queue for 15 secs then remove him if he doesn't reconnect in time.
 - User input for hostname and port (command args)
 - Validate input in client (Auth menu, game mode menu, answers in game)
 
