@@ -19,7 +19,9 @@ As for CLI arguments for the Server.java program, you can specify the port, as i
 - [x] Normal matchmaking (Single mode): Players are put into a game in order of queue insertion
 - [x] Ranked (Rank mode) matchmaking with elo relaxation over time: Players with similar elos are matched. As time goes on, bigger elo ranges are allowed per game.
 - [x] Fault tolerance with queue position resuming: When a client logs in, they are issued a token in case of connection loss. If a client disconnects while in a queue for a match they can rejoin in the same position.
-- [x] No race conditions: Writing and, some times, reading of files or insertion
+- [x] No race conditions: Writing and, some times, reading of files or critical data structures are locked to avoid race conditions
+- [x] Minimize thread overheads: By using fixed thread pools we are capable of minimizing thread overhead, since thread creation is done at the start and any tasks that need a thread that is not available just wait until one is, instead of creating another.
+- [x] Avoid slow clients: With the usage of nio's multiplexed non-blocking I/O we were able to stop slow clients from ever halting the system.
 
 ## Group members and evaluation:
 
