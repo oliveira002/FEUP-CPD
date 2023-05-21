@@ -303,9 +303,6 @@ public class Server implements GameEndCallback {
 
         for (List<User> gameTeam : allTeams) {
             if (gameTeam.size() == MAX_PLAYERS) {
-                Game game = new Game(gameTeam, GameType.RANKED, gameNr++);
-                game.setGameEndCallback(this); // 'this' refers to the current Server instance
-                gamePool.execute(game);
                 for (User player : gameTeam) {
                     player.state = UserState.IN_GAME;
 
@@ -318,8 +315,12 @@ public class Server implements GameEndCallback {
                     player.stopQueueTime();
                     synchronized (rankedQueueLock) {
                         rankedQueue.remove(player);
+                        System.out.println(player.username + " removed from ranked queue");
                     }
                 }
+                Game game = new Game(gameTeam, GameType.RANKED, gameNr++);
+                game.setGameEndCallback(this); // 'this' refers to the current Server instance
+                gamePool.execute(game);
             }
         }
     }
@@ -335,19 +336,47 @@ public class Server implements GameEndCallback {
     }
 
     public void purgeLostConnections(){
-        System.out.println(lostConnectionClients.toString());
+        System.out.println("DC: "+ lostConnectionClients.toString());
+        System.out.println("Normal: " + normalQueue.toString());
         List<User> removeUsersList = new ArrayList<>();
         for (User client : lostConnectionClients){
             if(client.getLossConnectionTime() == MAX_LOSS_CONNECTION_TIME_SECONDS){
                 revokeToken(TOKENS, client.username);
                 removeUsersList.add(client);
+                removeUserFromQueues(client);
             }
         }
         lostConnectionClients.removeAll(removeUsersList);
     }
 
+    private void removeUserFromQueues(User client){
+        Iterator<User> iterator = normalQueue.iterator();
+        while (iterator.hasNext()) {
+            User user = iterator.next();
+            if (user.username.equals(client.username)) {
+                synchronized (normalQueueLock) {
+                    iterator.remove(); // Remove the user
+                }
+                System.out.println(user.username + " removed from normal queue due to connection loss");
+                return; // Stop iterating once the user is found and removed
+            }
+        }
+
+        Iterator<User> iterator2 = rankedQueue.iterator();
+        while (iterator2.hasNext()) {
+            User user = iterator2.next();
+            if (user.username.equals(client.username)) {
+                synchronized (rankedQueueLock){
+                    iterator2.remove(); // Remove the user
+                }
+                System.out.println(user.username + " removed from ranked queue due to connection loss");
+                return; // Stop iterating once the user is found and removed
+            }
+        }
+    }
+
     @Override
-    public void onGameEnd(Game game) throws ClosedChannelException {
+    public void onGameEnd(Game game) {
         System.out.println("\n[END] Game #" + game.getGameNr() + " has ended");
         List<User> gamePlayers = game.getGamePlayers();
         for (User player : gamePlayers){
