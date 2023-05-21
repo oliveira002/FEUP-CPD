@@ -1,6 +1,4 @@
-- User input for hostname and port (command args)
 - Validate input in client (Auth menu, game mode menu, answers in game)
-
 
 - Check if user is already logged in when there's an attempt to log in.
 - Gain/lose more or less elo based on opponent elo
