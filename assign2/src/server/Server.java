@@ -182,7 +182,7 @@ public class Server implements GameEndCallback {
                         revokeToken(TOKENS, username);
 
                         System.out.println("[SUCCESS] Logged in successfully as " + client.username + " using session token: " + socketChannel.getRemoteAddress());
-                        sendData("[SUCCESS] Logged in successfully as " + client.username + " using session token", socketChannel);
+                        sendData("[SUCCESS] Logged in successfully as " + client.username + " using session token. This token has been revoked.", socketChannel);
 
                     }
                     case TOKEN_GEN -> {
