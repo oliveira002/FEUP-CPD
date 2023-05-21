@@ -1,11 +1,11 @@
 package server;
 
-public class RankedMatchmaking implements Runnable {
+public class LostConnection implements Runnable{
 
     private final Server server;
-    private final int MATCHMAKING_INTERVAL_MILISECONDS = 1000;
+    private final int CLIENT_PURGE_MILISECONDS = 1000;
 
-    public RankedMatchmaking(Server server) {
+    public LostConnection(Server server) {
         this.server = server;
     }
 
@@ -14,15 +14,13 @@ public class RankedMatchmaking implements Runnable {
         int i = 0;
         while (true) {
             try {
-                Thread.sleep(MATCHMAKING_INTERVAL_MILISECONDS);
+                Thread.sleep(CLIENT_PURGE_MILISECONDS);
                 i++;
-                server.rankedMatchMaking();
-                //System.out.println("Second: " + i);
+                server.purgeLostConnections();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
 
     }
-
 }

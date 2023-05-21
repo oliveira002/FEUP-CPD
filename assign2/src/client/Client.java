@@ -115,8 +115,23 @@ public class Client {
 
     private void tokenLogin() throws IOException{
 
+        Scanner scanner = new Scanner(System.in);
+
         System.out.println("\n------ Token Login ------");
         System.out.print("Token: ");
+        String token = scanner.nextLine();
+
+        sendData(token, socketChannel);
+
+        String[] response = readData(socketChannel);
+
+        assert response != null;
+        for (String message : response) {
+            if(wasOperationSuccessful(message)){
+                state = UserState.AUTHENTICATED;
+            }
+            System.out.println(message);
+        }
 
     }
 

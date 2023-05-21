@@ -23,13 +23,14 @@ public class Server implements GameEndCallback {
     private ServerSocketChannel serverSocketChannel;
     private Selector selector;
     private Map<SocketChannel, User> connectedClients = new HashMap<SocketChannel, User>();
+    private List<User> lostConnectionClients = new ArrayList<>();
     private Deque<User> normalQueue = new ArrayDeque<>();
     private List<User> rankedQueue = new ArrayList<>();
     private final Object normalQueueLock = new Object();
     private final Object rankedQueueLock = new Object();
-    private final Object connectedClientsLock = new Object();
     private ExecutorService gamePool;
     private final ExecutorService rankedMMPool = Executors.newSingleThreadExecutor();
+    private final ExecutorService lostConnectionClientsPool = Executors.newSingleThreadExecutor();
     private int gameNr = 1;
 
     public Server() {
@@ -57,6 +58,8 @@ public class Server implements GameEndCallback {
         try {
             RankedMatchmaking rankedMatchmaking = new RankedMatchmaking(this);
             rankedMMPool.execute(rankedMatchmaking);
+            LostConnection lostConnection = new LostConnection(this);
+            lostConnectionClientsPool.execute(lostConnection);
 
             while (true) {
                 selector.select();
@@ -166,6 +169,20 @@ public class Server implements GameEndCallback {
 
                     }
                     case TOKEN_LOGIN -> {
+                        if(!isTokenValid(TOKENS, message)){
+                            System.out.println("[FAILURE] Session token is not valid: " + socketChannel.getRemoteAddress());
+                            sendData("[FAILURE] Session token is not valid!", socketChannel);
+                            return;
+                        }
+
+                        String username = getUsernameFromToken(TOKENS, message);
+                        //Should never be null but wtv
+                        if(username == null){return;}
+
+                        revokeToken(TOKENS, username);
+
+                        System.out.println("[SUCCESS] Logged in successfully as " + client.username + " using session token: " + socketChannel.getRemoteAddress());
+                        sendData("[SUCCESS] Logged in successfully as " + client.username + " using session token", socketChannel);
 
                     }
                     case TOKEN_GEN -> {
@@ -208,9 +225,12 @@ public class Server implements GameEndCallback {
             }
         } catch (SocketException e) {
             client.state = UserState.LOST_CONNECTION;
+            client.startLossConectionTimer();
             System.out.println("Client lost connection: " + socketChannel.getRemoteAddress());
             socketChannel.close();
-            //connectedClients.remove(socketChannel);
+            connectedClients.remove(socketChannel);
+            if(client.username != null)
+                lostConnectionClients.add(client);
         }
     }
 
@@ -219,7 +239,7 @@ public class Server implements GameEndCallback {
         client.startQueueTimer();
         System.out.println("Client " + client.username + " joined normal queue");
 
-        if(normalQueue.size() >= MAX_PLAYERS){
+        while(normalQueue.size() >= MAX_PLAYERS){
 
             List<User> gamePlayers = new ArrayList<>();
 
@@ -312,6 +332,18 @@ public class Server implements GameEndCallback {
             user.minElo -= newEloDiff;
             user.maxElo += newEloDiff;
         }
+    }
+
+    public void purgeLostConnections(){
+        System.out.println(lostConnectionClients.toString());
+        List<User> removeUsersList = new ArrayList<>();
+        for (User client : lostConnectionClients){
+            if(client.getLossConnectionTime() == MAX_LOSS_CONNECTION_TIME_SECONDS){
+                revokeToken(TOKENS, client.username);
+                removeUsersList.add(client);
+            }
+        }
+        lostConnectionClients.removeAll(removeUsersList);
     }
 
     @Override

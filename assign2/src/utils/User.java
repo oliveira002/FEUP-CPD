@@ -10,13 +10,13 @@ import static utils.Utils.MAX_ELO_DIFF;
 
 public class User {
     private SocketChannel channel;
-    private String token;
     public String username;
     public int elo;
     public int minElo;
     public int maxElo;
     public UserState state;
     private int queueTime = 0;
+    private int lossConnectionTime = 0;
     private Timer timer;
 
     public User(){
@@ -44,6 +44,20 @@ public class User {
 
     public int getQueueTime() {
         return queueTime;
+    }
+
+    public void startLossConectionTimer(){
+        timer = new Timer();
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                lossConnectionTime++;
+            }
+        }, 0, 1000);
+    }
+
+    public int getLossConnectionTime() {
+        return lossConnectionTime;
     }
 
     public void stopQueueTime(){

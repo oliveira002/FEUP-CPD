@@ -44,6 +44,8 @@ public class Utils {
 
     private static final Object readDBLock = new Object();
     private static final Object insertDBLock = new Object();
+    private static final Object readTokensDBLock = new Object();
+    private static final Object insertTokensDBLock = new Object();
 
     /**
      * Sends a given message through a given channel.
@@ -252,43 +254,45 @@ public class Utils {
      * @param newELO The new elo.
      */
     public static void updatePlayerELO(String file, String username, int newELO) {
-        try {
-            File inputFile = new File(file);
-            File tempFile = new File(tempFilePath(file));
+        synchronized (insertDBLock){
+            try {
+                File inputFile = new File(file);
+                File tempFile = new File(tempFilePath(file));
 
-            BufferedReader reader = new BufferedReader(new FileReader(inputFile));
-            BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
+                BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+                BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
 
-            List<String> linesToUpdate = new ArrayList<>();
+                List<String> linesToUpdate = new ArrayList<>();
 
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] data = line.split(",");
-                if (data.length >= 3 && data[0].equals(username)) {
-                    data[2] = String.valueOf(newELO); // Update the ELO value
-                    line = String.join(",", data);
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] data = line.split(",");
+                    if (data.length >= 3 && data[0].equals(username)) {
+                        data[2] = String.valueOf(newELO); // Update the ELO value
+                        line = String.join(",", data);
+                    }
+                    linesToUpdate.add(line);
                 }
-                linesToUpdate.add(line);
-            }
 
-            // Write all the updated lines to the temporary file
-            for (String updatedLine : linesToUpdate) {
-                writer.write(updatedLine);
-                writer.newLine();
-            }
+                // Write all the updated lines to the temporary file
+                for (String updatedLine : linesToUpdate) {
+                    writer.write(updatedLine);
+                    writer.newLine();
+                }
 
-            // Close the readers/writers
-            reader.close();
-            writer.close();
+                // Close the readers/writers
+                reader.close();
+                writer.close();
 
-            // Replace the original file with the temporary file
-            if (inputFile.delete()) {
-                tempFile.renameTo(inputFile);
-            } else {
-                throw new IOException("Failed to update player's ELO. Unable to delete original file.");
+                // Replace the original file with the temporary file
+                if (inputFile.delete()) {
+                    tempFile.renameTo(inputFile);
+                } else {
+                    throw new IOException("Failed to update player's ELO. Unable to delete original file.");
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -306,52 +310,54 @@ public class Utils {
     }
 
     /**
-     *  Stores in the DB a newly generated session token for a given user.
+     *  Stores a newly generated session token for a given user in the DB.
      * @param filePath The file to store the token in.
      * @param username The username of the user.
      * @param token The generated token.
      */
     public static void storeToken(String filePath, String username, String token){
-        File file = new File(filePath);
-        boolean usernameExists = false;
+        synchronized (insertTokensDBLock) {
+            File file = new File(filePath);
+            boolean usernameExists = false;
 
-        try {
-            // Create the file if it doesn't exist
-            if (!file.exists()) {
-                file.createNewFile();
-            }
-
-            // Read the existing file content
-            BufferedReader reader = new BufferedReader(new FileReader(file));
-            StringBuilder sb = new StringBuilder();
-            String line;
-
-            // Check if the username already exists and update the token value
-            while ((line = reader.readLine()) != null) {
-                String[] values = line.split(",");
-                if (values.length == 2 && values[0].equals(username)) {
-                    sb.append(username).append(",").append(token).append(System.lineSeparator());
-                    usernameExists = true;
-                } else {
-                    sb.append(line).append(System.lineSeparator());
+            try {
+                // Create the file if it doesn't exist
+                if (!file.exists()) {
+                    file.createNewFile();
                 }
+
+                // Read the existing file content
+                BufferedReader reader = new BufferedReader(new FileReader(file));
+                StringBuilder sb = new StringBuilder();
+                String line;
+
+                // Check if the username already exists and update the token value
+                while ((line = reader.readLine()) != null) {
+                    String[] values = line.split(",");
+                    if (values.length == 2 && values[0].equals(username)) {
+                        sb.append(username).append(",").append(token).append(System.lineSeparator());
+                        usernameExists = true;
+                    } else {
+                        sb.append(line).append(System.lineSeparator());
+                    }
+                }
+                reader.close();
+
+                // Append the username and token if it doesn't exist
+                if (!usernameExists) {
+                    sb.append(username).append(",").append(token).append(System.lineSeparator());
+                }
+
+                // Write the updated content back to the file
+                BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+                writer.write(sb.toString());
+                writer.close();
+
+                System.out.println("Token stored successfully.");
+
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            reader.close();
-
-            // Append the username and token if it doesn't exist
-            if (!usernameExists) {
-                sb.append(username).append(",").append(token).append(System.lineSeparator());
-            }
-
-            // Write the updated content back to the file
-            BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-            writer.write(sb.toString());
-            writer.close();
-
-            System.out.println("Token stored successfully.");
-
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -361,37 +367,85 @@ public class Utils {
      * @param username THe username of the user.
      */
     public static void revokeToken(String filePath, String username) {
-        File file = new File(filePath);
-        List<String> lines = new ArrayList<>();
+        synchronized (insertTokensDBLock){
+            File file = new File(filePath);
+            List<String> lines = new ArrayList<>();
 
-        try {
-            // Read the existing file content
-            BufferedReader reader = new BufferedReader(new FileReader(file));
-            String line;
+            try {
+                // Read the existing file content
+                BufferedReader reader = new BufferedReader(new FileReader(file));
+                String line;
 
-            // Collect all lines except the one to be deleted
-            while ((line = reader.readLine()) != null) {
-                String[] values = line.split(",");
-                if (values.length == 2 && values[0].equals(username)) {
-                    // Skip the line for the given username
-                    continue;
+                // Collect all lines except the one to be deleted
+                while ((line = reader.readLine()) != null) {
+                    String[] values = line.split(",");
+                    if (values.length == 2 && values[0].equals(username)) {
+                        // Skip the line for the given username
+                        continue;
+                    }
+                    lines.add(line);
                 }
-                lines.add(line);
+                reader.close();
+
+                // Write the updated content back to the file
+                BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+                for (String updatedLine : lines) {
+                    writer.write(updatedLine);
+                    writer.newLine();
+                }
+                writer.close();
+
+                System.out.println("Revoked session token for user " + username);
+
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            reader.close();
+        }
+    }
 
-            // Write the updated content back to the file
-            BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-            for (String updatedLine : lines) {
-                writer.write(updatedLine);
-                writer.newLine();
+    /**
+     * Searches for a session token in the DB.
+     * @param file The file representing the DB.
+     * @param token The token to search for.
+     * @return true if the token is valid, false otherwise.
+     */
+    public static boolean isTokenValid(String file, String token) {
+        synchronized (readTokensDBLock){
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] values = line.split(",");
+                    if (values.length == 2 && values[1].equals(token)) {
+                        return true;
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            writer.close();
+            return false;
+        }
+    }
 
-            System.out.println("Revoked session token for user " + username);
-
-        } catch (IOException e) {
-            e.printStackTrace();
+    /**
+     * Searches for the username of a client based on a given token.
+     * @param file The file representing the DB.
+     * @param token The token associated with the username.
+     * @return The username if found, null otherwise.
+     */
+    public static String getUsernameFromToken(String file, String token) {
+        synchronized (readTokensDBLock){
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] values = line.split(",");
+                    if (values.length == 2 && values[1].equals(token)) {
+                        return values[0]; // Return the username
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null; // Token not found, return null
         }
     }
 }
