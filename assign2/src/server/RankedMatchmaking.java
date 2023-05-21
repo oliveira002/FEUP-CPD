@@ -18,7 +18,7 @@ public class RankedMatchmaking implements Runnable {
                 Thread.sleep(MATCHMAKING_INTERVAL_MILISECONDS);
                 i++;
                 server.rankedMatchMaking();
-                System.out.println("Second: " + i);
+                //System.out.println("Second: " + i);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

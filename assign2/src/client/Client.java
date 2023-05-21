@@ -50,6 +50,8 @@ public class Client {
                 switch(state){
                     case CONNECTED -> authMenu();
                     case REGISTER, LOGIN -> credentialsMenu();
+                    case TOKEN_LOGIN -> tokenLogin();
+                    case TOKEN_GEN -> getToken();
                     case AUTHENTICATED -> queueSelectMenu();
                     case NORMAL_QUEUE, RANKED_QUEUE -> checkGameStart();
                     case WAITING_QUESTION ->  getQuestion();
@@ -74,6 +76,7 @@ public class Client {
         sendData(option, socketChannel);
 
         switch(Integer.parseInt(option)){
+            case 0 -> state = UserState.TOKEN_LOGIN;
             case 1 -> state = UserState.REGISTER;
             case 2 -> state = UserState.LOGIN;
             case 3 -> {
@@ -103,10 +106,28 @@ public class Client {
         assert response != null;
         for (String message : response) {
             if(wasOperationSuccessful(message)){
-                state = UserState.AUTHENTICATED;
+                state = UserState.TOKEN_GEN;
             }
             System.out.println(message);
         }
+
+    }
+
+    private void tokenLogin() throws IOException{
+
+    }
+
+    private void getToken() throws IOException{
+
+        sendData("[TOKEN]", socketChannel);
+
+        String[] response = readData(socketChannel);
+
+        assert response != null;
+        for (String message : response) {
+            System.out.println(message);
+        }
+        state = UserState.AUTHENTICATED;
 
     }
 

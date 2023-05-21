@@ -19,6 +19,7 @@ public class Server implements GameEndCallback {
 
     private static final int PORT = 8000;
     protected static final String USER_CREDENTIALS = "src/server/users.txt";
+    private static final String TOKENS = "src/server/tokens.txt";
     private ServerSocketChannel serverSocketChannel;
     private Selector selector;
     private Map<SocketChannel, User> connectedClients = new HashMap<SocketChannel, User>();
@@ -111,6 +112,9 @@ public class Server implements GameEndCallback {
                 switch (client.state) {
                     case CONNECTED -> {
                         switch (Integer.parseInt(message)) {
+                            case 0 -> {
+                                client.state = UserState.TOKEN_LOGIN;
+                            }
                             case 1 -> {
                                 client.state = UserState.REGISTER;
                             }
@@ -140,10 +144,9 @@ public class Server implements GameEndCallback {
 
                         System.out.println("[SUCCESS] Registered successfully as " + credentials[0] + ": " + socketChannel.getRemoteAddress());
                         sendData("[SUCCESS] Registered successfully as " + credentials[0], socketChannel);
-                        tempClient = new User(credentials[0], 0, UserState.AUTHENTICATED, socketChannel);
+                        tempClient = new User(credentials[0], 0, UserState.TOKEN_GEN, socketChannel);
                         connectedClients.replace(socketChannel, client, tempClient);
                         client = tempClient;
-
                     }
                     case LOGIN -> {
                         String[] credentials = parseCredentials(message);
@@ -161,6 +164,17 @@ public class Server implements GameEndCallback {
                         connectedClients.replace(socketChannel, client, tempClient);
                         client = tempClient;
 
+                    }
+                    case TOKEN_LOGIN -> {
+                       System.out.println("Boas2");
+                    }
+                    case TOKEN_GEN -> {
+                        System.out.println("Boas");
+                        UUID uuid = UUID.randomUUID();
+                        System.out.println("New session token generated for " + client.username + ": " + uuid);
+                        storeToken(TOKENS,client.username, uuid.toString());
+                        sendData("This is your one time authentication token. Use it in case of a connection loss.\n"+uuid, socketChannel);
+                        client.state = UserState.AUTHENTICATED;
                     }
                     case AUTHENTICATED -> {
                         switch (message){
@@ -182,6 +196,7 @@ public class Server implements GameEndCallback {
                             case "3" -> {
                                 client.state = UserState.DISCONNECTED;
                                 System.out.println("Client disconnected: " + socketChannel.getRemoteAddress());
+                                revokeToken(TOKENS, client.username);
                                 socketChannel.keyFor(selector).cancel();
                                 socketChannel.close();
                                 connectedClients.remove(socketChannel);
@@ -234,35 +249,11 @@ public class Server implements GameEndCallback {
         rankedQueue.add(client);
         client.startQueueTimer();
         System.out.println("Client " + client.username + " joined ranked queue");
-
-        /*if(rankedQueue.size() >= MAX_PLAYERS){
-
-            List<User> gamePlayers = new ArrayList<>();
-
-            for(int i = 0; i < MAX_PLAYERS; i++){
-                User player = rankedQueue.poll();
-                assert player != null;
-                System.out.println(player.username + " removed from ranked queue");
-                player.state = UserState.IN_GAME;
-
-                SelectionKey key = player.getChannel().keyFor(selector);
-                if (key.isValid()) {
-                    int ops = key.interestOps();
-                    ops &= ~SelectionKey.OP_READ;
-                    key.interestOps(ops);
-                }
-
-                gamePlayers.add(player);
-            }
-            Game game = new Game(gamePlayers, GameType.NORMAL, gameNr++);
-            game.setGameEndCallback(this); // 'this' refers to the current Server instance
-            gamePool.execute(game);
-        }*/
     }
 
     public void rankedMatchMaking() {
 
-        /*List<List<User>> allTeams = new ArrayList<>();
+        List<List<User>> allTeams = new ArrayList<>();
         for (User player : rankedQueue) {
             if(!player.getChannel().isConnected()) {
                 continue;
@@ -306,11 +297,22 @@ public class Server implements GameEndCallback {
                         key.interestOps(ops);
                     }
                     player.stopQueueTime();
-                    rankedQueue.remove(player);
+                    synchronized (rankedQueueLock) {
+                        rankedQueue.remove(player);
+                    }
                 }
             }
-        }*/
+        }
+    }
 
+    private void increaseEloBounds() {
+        for (User user : rankedQueue) {
+            int queueTime = user.getQueueTime();
+            int newEloDiff = ELO_RELAX_FACTOR * queueTime;
+
+            user.minElo -= newEloDiff;
+            user.maxElo += newEloDiff;
+        }
     }
 
     @Override

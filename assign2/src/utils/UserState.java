@@ -4,6 +4,8 @@ public enum UserState {
     CONNECTED,
     LOGIN,
     REGISTER,
+    TOKEN_GEN,
+    TOKEN_LOGIN,
     AUTHENTICATED,
     NORMAL_QUEUE,
     RANKED_QUEUE,

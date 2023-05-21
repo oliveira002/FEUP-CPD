@@ -1,4 +1,4 @@
-- Ranked matchmaking algorithm (relaxing elo as time passes without conditions for a game to start)
+- Ranked matchmaking algorithm (relaxing elo as time passes without conditions for a game to start) -> FUCKING SCUFFED
 - When client logs in, server sends him a unique token that can be used to relog without credentials (When user connects to server, check if there's an entry in token.txt that's valid and send it)
 - If player.state == LOST_CONNECTION keep him in queue for 5 secs then remove him if he doesn't reconnect in time.
 - Check if user is already logged in when there's an attempt to log in.
@@ -11,8 +11,12 @@
 - Handle user disconnects mid-game, game keeps running, disconnected player get all remaining answers wrong and his elo is updated
 - Comentar codigo
 - Fechar sockets, selectors, etc
-- STRESS TEST
 
 Think about:
 - Lock connectedClients ??
-- Lock gamePool.execute() ?? -> If there's two games starting at the same time and pool has 1 free thread
+
+When a user logs in, and he isn't yet logged in:
+    - Generate a token and give it to him.
+
+When user tries to log in with an already logged-in user:
+    - Tell him he's already logged in and to try and login with a previously given token or wait MAX_LOSS_CONNECTION_TIME_SECONDS seconds until server purges him.

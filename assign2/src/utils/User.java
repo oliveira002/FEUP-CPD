@@ -6,11 +6,15 @@ import java.nio.channels.SocketChannel;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static utils.Utils.MAX_ELO_DIFF;
+
 public class User {
     private SocketChannel channel;
     private String token;
     public String username;
     public int elo;
+    public int minElo;
+    public int maxElo;
     public UserState state;
     private int queueTime = 0;
     private Timer timer;
@@ -22,6 +26,8 @@ public class User {
     public User(String username, int elo, UserState state, SocketChannel channel){
         this.username = username;
         this.elo = elo;
+        this.minElo = elo - MAX_ELO_DIFF;
+        this.maxElo = elo + MAX_ELO_DIFF;
         this.state = state;
         this.channel = channel;
     }

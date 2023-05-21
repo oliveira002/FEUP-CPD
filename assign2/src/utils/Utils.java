@@ -12,10 +12,10 @@ import java.util.Objects;
 
 public class Utils {
 
-    public static int MAX_GAMES = 2;
-    public static int MAX_PLAYERS = 2;
+    public static int MAX_GAMES = 1;
+    public static int MAX_PLAYERS = 1;
     public static int MAX_QUESTIONS = 3;
-    public static int ANSWER_TIMEOUT_SECONDS = 4;
+    public static int ANSWER_TIMEOUT_SECONDS = 15;
     public static int CORRECT_ANSWER_POINTS = 5;
     public static int MAX_LOSS_CONNECTION_TIME_SECONDS = 5;
     public static int MAX_ELO_DIFF = 50;
@@ -26,6 +26,7 @@ public class Utils {
     public static String authMenu =
         """
         ------ Authentication ------
+        0. Token login
         1. Register
         2. Login
         3. Disconnect
@@ -116,7 +117,7 @@ public class Utils {
                     String lineValue = values[0] + "," + values[1];
 
                     if (lineValue.equals(searchValue)) {
-                        return new User(values[0], Integer.parseInt(values[2]), UserState.AUTHENTICATED, null);
+                        return new User(values[0], Integer.parseInt(values[2]), UserState.TOKEN_GEN, null);
                     }
                 }
             } catch (IOException e) {
@@ -304,5 +305,94 @@ public class Utils {
         return transformedPath.toString();
     }
 
+    /**
+     *
+     * @param filePath
+     * @param username
+     * @param token
+     */
+    public static void storeToken(String filePath, String username, String token){
+        File file = new File(filePath);
+        boolean usernameExists = false;
+
+        try {
+            // Create the file if it doesn't exist
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+
+            // Read the existing file content
+            BufferedReader reader = new BufferedReader(new FileReader(file));
+            StringBuilder sb = new StringBuilder();
+            String line;
+
+            // Check if the username already exists and update the token value
+            while ((line = reader.readLine()) != null) {
+                String[] values = line.split(",");
+                if (values.length == 2 && values[0].equals(username)) {
+                    sb.append(username).append(",").append(token).append(System.lineSeparator());
+                    usernameExists = true;
+                } else {
+                    sb.append(line).append(System.lineSeparator());
+                }
+            }
+            reader.close();
+
+            // Append the username and token if it doesn't exist
+            if (!usernameExists) {
+                sb.append(username).append(",").append(token).append(System.lineSeparator());
+            }
+
+            // Write the updated content back to the file
+            BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+            writer.write(sb.toString());
+            writer.close();
+
+            System.out.println("Token stored successfully.");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     *
+     * @param filePath
+     * @param username
+     */
+    public static void revokeToken(String filePath, String username) {
+        File file = new File(filePath);
+        List<String> lines = new ArrayList<>();
+
+        try {
+            // Read the existing file content
+            BufferedReader reader = new BufferedReader(new FileReader(file));
+            String line;
+
+            // Collect all lines except the one to be deleted
+            while ((line = reader.readLine()) != null) {
+                String[] values = line.split(",");
+                if (values.length == 2 && values[0].equals(username)) {
+                    // Skip the line for the given username
+                    continue;
+                }
+                lines.add(line);
+            }
+            reader.close();
+
+            // Write the updated content back to the file
+            BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+            for (String updatedLine : lines) {
+                writer.write(updatedLine);
+                writer.newLine();
+            }
+            writer.close();
+
+            System.out.println("Revoked token for user " + username);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
 
