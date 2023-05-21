@@ -389,10 +389,10 @@ public class Server implements GameEndCallback {
     }
 
     public void purgeLostConnections(){
-        System.out.println("ON: "+ connectedClients.toString());
+        /*System.out.println("ON: "+ connectedClients.toString());
         System.out.println("DC: "+ lostConnectionClients.toString());
         System.out.println("Normal: " + normalQueue.toString());
-        System.out.println();
+        System.out.println();*/
         List<User> removeUsersList = new ArrayList<>();
         for (User client : lostConnectionClients){
             if(client.getLossConnectionTime() == MAX_LOSS_CONNECTION_TIME_SECONDS){
