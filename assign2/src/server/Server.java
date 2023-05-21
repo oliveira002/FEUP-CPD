@@ -184,6 +184,7 @@ public class Server implements GameEndCallback {
                         User tempClient = getUserFromListByUsername(lostConnectionClients, username);
                         assert tempClient != null;
                         tempClient.stopLossConnectionTime();
+                        tempClient.setChannel(socketChannel);
                         tempClient.state = UserState.WAITING_TOKEN_RESPONSE;
                         lostConnectionClients.remove(tempClient);
                         connectedClients.put(socketChannel, tempClient);
