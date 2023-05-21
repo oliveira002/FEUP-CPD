@@ -17,7 +17,7 @@ import static utils.Utils.*;
 
 public class Server implements GameEndCallback {
 
-    private static final int PORT = 8000;
+    private final int PORT;
     protected static final String USER_CREDENTIALS = "src/server/users.txt";
     private static final String TOKENS = "src/server/tokens.txt";
     private ServerSocketChannel serverSocketChannel;
@@ -34,7 +34,9 @@ public class Server implements GameEndCallback {
     private final ExecutorService lostConnectionClientsPool = Executors.newSingleThreadExecutor();
     private int gameNr = 1;
 
-    public Server() {
+    public Server(int port) {
+        this.PORT = port;
+
         try{
             serverSocketChannel = ServerSocketChannel.open();
             serverSocketChannel.socket().bind(new InetSocketAddress(PORT));
@@ -502,7 +504,19 @@ public class Server implements GameEndCallback {
     }
 
     public static void main(String[] args) {
-        Server server = new Server();
+
+        int port = 8000;
+        if(args.length != 0){
+            try{
+                port = Integer.parseInt(args[0]);
+            }
+            catch (NumberFormatException e){
+                System.out.printf("First argument \"port\" has to be an integer, %s not allowed!%n", args[0]);
+                System.out.printf("Using default port: %d%n%n", port);
+            }
+        }
+
+        Server server = new Server(port);
         server.start();
     }
 

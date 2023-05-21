@@ -17,15 +17,18 @@ import java.util.concurrent.TimeUnit;
 import static utils.Utils.*;
 
 public class Client {
-    private static final int PORT = 8000;
-    private static final String HOSTNAME = "localhost";
+    private static int PORT;
+    private static String HOSTNAME;
     private static final String DEFAULT_ANSWER = "NULL";
     private SocketChannel socketChannel;
     private UserState state;
     private ScheduledExecutorService answerTimer;
     private boolean lastQuestion = false;
 
-    public Client(){
+    public Client(int port, String hostname){
+        this.PORT = port;
+        this.HOSTNAME = hostname;
+
         try {
             socketChannel = SocketChannel.open();
             socketChannel.connect(new InetSocketAddress(HOSTNAME, PORT));
@@ -273,7 +276,25 @@ public class Client {
     }
 
     public static void main(String[] args) {
-        Client client = new Client();
+
+        int port = 8000;
+
+        if (args.length < 2) {
+            System.out.println("Invalid arguments. Usage: Client.java <hostname> <port>");
+            return;
+        }
+
+        String hostname = args[0];
+
+        try{
+            port = Integer.parseInt(args[1]);
+        }
+        catch (NumberFormatException e){
+            System.out.printf("Second argument \"port\" has to be an integer, %s not allowed!%n", args[1]);
+            System.out.printf("Using default port: %d%n%n", port);
+        }
+
+        Client client = new Client(port, hostname);
         client.connect();
     }
 }
