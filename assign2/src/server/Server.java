@@ -171,7 +171,7 @@ public class Server implements GameEndCallback {
                     case TOKEN_LOGIN -> {
                         if(!isTokenValid(TOKENS, message)){
                             System.out.println("[FAILURE] Session token is not valid: " + socketChannel.getRemoteAddress());
-                            sendData("[FAILURE] Session token is not valid!", socketChannel);
+                            sendData("[FAILURE] Session token is not valid! It's either wrong or has been revoked.", socketChannel);
                             return;
                         }
 
@@ -181,8 +181,12 @@ public class Server implements GameEndCallback {
 
                         revokeToken(TOKENS, username);
 
-                        System.out.println("[SUCCESS] Logged in successfully as " + client.username + " using session token: " + socketChannel.getRemoteAddress());
-                        sendData("[SUCCESS] Logged in successfully as " + client.username + " using session token. This token has been revoked.", socketChannel);
+                        User tempClient = getUserFromListByUsername(lostConnectionClients, username);
+                        lostConnectionClients.remove(tempClient);
+                        connectedClients.put(socketChannel, tempClient);
+
+                        System.out.println("[SUCCESS] Logged in successfully as " + username + " using session token: " + socketChannel.getRemoteAddress());
+                        sendData("[SUCCESS] Logged in successfully as " + username + " using session token. This token has been revoked.", socketChannel);
 
                     }
                     case TOKEN_GEN -> {
@@ -336,6 +340,7 @@ public class Server implements GameEndCallback {
     }
 
     public void purgeLostConnections(){
+        System.out.println("ON: "+ connectedClients.toString());
         System.out.println("DC: "+ lostConnectionClients.toString());
         System.out.println("Normal: " + normalQueue.toString());
         List<User> removeUsersList = new ArrayList<>();

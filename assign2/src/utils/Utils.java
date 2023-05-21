@@ -44,8 +44,7 @@ public class Utils {
 
     private static final Object readDBLock = new Object();
     private static final Object insertDBLock = new Object();
-    private static final Object readTokensDBLock = new Object();
-    private static final Object insertTokensDBLock = new Object();
+    private static final Object tokensDBLock = new Object(); //Using the same lock to read and write because deletes can happen, so we don't want to accidentally perform ghost reads
 
     /**
      * Sends a given message through a given channel.
@@ -147,6 +146,29 @@ public class Utils {
                 e.printStackTrace();
             }
         }
+    }
+
+    /**
+     * Retrieved a player's elo from the DB.
+     * @param file The file acting as a DB.
+     * @param username The username of the player.
+     * @return The player's elo, 0 if operation was no successful.
+     */
+    public static int getUserEloFromDB(String file, String username){
+        synchronized (readDBLock){
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] parts = line.split(",");
+                    if (parts.length >= 2 && parts[0].equals(username)) {
+                        return Integer.parseInt(parts[1].trim());
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return 0; // Return a default value if the user's ELO is not found or an error occurs}
+       }
     }
 
     /**
@@ -316,7 +338,7 @@ public class Utils {
      * @param token The generated token.
      */
     public static void storeToken(String filePath, String username, String token){
-        synchronized (insertTokensDBLock) {
+        synchronized (tokensDBLock) {
             File file = new File(filePath);
             boolean usernameExists = false;
 
@@ -367,7 +389,7 @@ public class Utils {
      * @param username THe username of the user.
      */
     public static void revokeToken(String filePath, String username) {
-        synchronized (insertTokensDBLock){
+        synchronized (tokensDBLock){
             File file = new File(filePath);
             List<String> lines = new ArrayList<>();
 
@@ -410,7 +432,7 @@ public class Utils {
      * @return true if the token is valid, false otherwise.
      */
     public static boolean isTokenValid(String file, String token) {
-        synchronized (readTokensDBLock){
+        synchronized (tokensDBLock){
             try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
@@ -433,7 +455,7 @@ public class Utils {
      * @return The username if found, null otherwise.
      */
     public static String getUsernameFromToken(String file, String token) {
-        synchronized (readTokensDBLock){
+        synchronized (tokensDBLock){
             try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
@@ -447,6 +469,16 @@ public class Utils {
             }
             return null; // Token not found, return null
         }
+    }
+
+
+    public static User getUserFromListByUsername(List<User> userList, String username){
+        for (User user : userList) {
+            if (user.username.equals(username)) {
+                return user;
+            }
+        }
+        return null;
     }
 }
 
