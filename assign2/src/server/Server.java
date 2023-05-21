@@ -169,7 +169,6 @@ public class Server implements GameEndCallback {
                        System.out.println("Boas2");
                     }
                     case TOKEN_GEN -> {
-                        System.out.println("Boas");
                         UUID uuid = UUID.randomUUID();
                         System.out.println("New session token generated for " + client.username + ": " + uuid);
                         storeToken(TOKENS,client.username, uuid.toString());

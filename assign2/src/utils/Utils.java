@@ -306,10 +306,10 @@ public class Utils {
     }
 
     /**
-     *
-     * @param filePath
-     * @param username
-     * @param token
+     *  Stores in the DB a newly generated session token for a given user.
+     * @param filePath The file to store the token in.
+     * @param username The username of the user.
+     * @param token The generated token.
      */
     public static void storeToken(String filePath, String username, String token){
         File file = new File(filePath);
@@ -356,9 +356,9 @@ public class Utils {
     }
 
     /**
-     *
-     * @param filePath
-     * @param username
+     * Removes a session token for a user from the DB.
+     * @param filePath The file representing the DB.
+     * @param username THe username of the user.
      */
     public static void revokeToken(String filePath, String username) {
         File file = new File(filePath);
@@ -388,7 +388,7 @@ public class Utils {
             }
             writer.close();
 
-            System.out.println("Revoked token for user " + username);
+            System.out.println("Revoked session token for user " + username);
 
         } catch (IOException e) {
             e.printStackTrace();
