@@ -28,6 +28,7 @@ public class Server implements GameEndCallback {
     private List<User> rankedQueue = new ArrayList<>();
     private final Object normalQueueLock = new Object();
     private final Object rankedQueueLock = new Object();
+    private final Object gamePoolLock = new Object();
     private ExecutorService gamePool;
     private final ExecutorService rankedMMPool = Executors.newSingleThreadExecutor();
     private final ExecutorService lostConnectionClientsPool = Executors.newSingleThreadExecutor();
@@ -206,11 +207,13 @@ public class Server implements GameEndCallback {
                         else if (state_aux == UserState.NORMAL_QUEUE) {
                             System.out.println("Client " + client.username + " rejoined normal queue");
                             sendData("[NORMAL]", socketChannel);
+                            updateNormalQueue(client);
                             handleNormalQueue();
                         }
                         else if (state_aux == UserState.RANKED_QUEUE) {
                             System.out.println("Client " + client.username + " rejoined ranked queue");
                             sendData("[RANKED]", socketChannel);
+                            updateRankedQueue(client);
                         }
 
                         client.state = Objects.requireNonNullElse(state_aux, UserState.AUTHENTICATED);
@@ -296,7 +299,9 @@ public class Server implements GameEndCallback {
 
                 Game game = new Game(gamePlayers, GameType.NORMAL, gameNr++);
                 game.setGameEndCallback(this); // 'this' refers to the current Server instance
-                gamePool.execute(game);
+                synchronized (gamePoolLock){
+                    gamePool.execute(game);
+                }
             }
             else{
                 Collections.reverse(gamePlayers);
@@ -362,7 +367,9 @@ public class Server implements GameEndCallback {
                 }
                 Game game = new Game(gameTeam, GameType.RANKED, gameNr++);
                 game.setGameEndCallback(this); // 'this' refers to the current Server instance
-                gamePool.execute(game);
+                synchronized (gamePoolLock){
+                    gamePool.execute(game);
+                }
             }
         }
     }
@@ -433,6 +440,41 @@ public class Server implements GameEndCallback {
             }
         }
         return null;
+    }
+
+    private void updateNormalQueue(User client){
+
+        LinkedList<User> userList = new LinkedList<>(normalQueue);
+        User userToReplace = null;
+        ListIterator<User> iterator = userList.listIterator();
+        while (iterator.hasNext()) {
+            User user = iterator.next();
+            if (user.username.equals(client.username)) {
+                userToReplace = user;
+                break;
+            }
+        }
+
+        if (userToReplace != null) {
+            iterator.set(client);
+            normalQueue = new ArrayDeque<>(userList);
+        }
+
+    }
+
+    private void updateRankedQueue(User client){
+        int index = -1;
+        for (int i = 0; i < rankedQueue.size(); i++) {
+            User user = rankedQueue.get(i);
+            if (user.username.equals(client.username)) {
+                index = i;
+                break;
+            }
+        }
+
+        if (index != -1) {
+            rankedQueue.set(index, client);
+        }
     }
 
     @Override

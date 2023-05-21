@@ -1,4 +1,3 @@
-- Ranked matchmaking algorithm (relaxing elo as time passes without conditions for a game to start) -> FUCKING SCUFFED
 - User input for hostname and port (command args)
 - Validate input in client (Auth menu, game mode menu, answers in game)
 
@@ -9,12 +8,7 @@
 - When server stops, clients maybe crash or maybe continue running until communication attempt is made, handle exceptions and tell client server is offline.
 - If Game is queued, tell users they have to wait
 - Handle user disconnects mid-game, game keeps running, disconnected player get all remaining answers wrong and his elo is updated
-- Comentar codigo
-- Fechar sockets, selectors, etc
 
-
-When a user logs in, and he isn't yet logged in:
-    - Generate a token and give it to him.
 
 When user tries to log in with an already logged-in user:
     - Tell him he's already logged in and to try and login with a previously given token or wait MAX_LOSS_CONNECTION_TIME_SECONDS seconds until server purges him.
