@@ -18,7 +18,7 @@ public class Utils {
     public static int ANSWER_TIMEOUT_SECONDS = 10;
     public static int CORRECT_ANSWER_POINTS = 5;
     public static int DEFAULT_ELO = 500;
-    public static int MAX_LOSS_CONNECTION_TIME_SECONDS = 15;
+    public static int MAX_LOSS_CONNECTION_TIME_SECONDS = 150;
     public static int MAX_ELO_DIFF = 50;
     public static int MAX_WAITING_TIME_SECONDS = 10;
     public static int ELO_RELAX_FACTOR = 5;

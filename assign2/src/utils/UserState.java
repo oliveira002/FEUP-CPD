@@ -6,6 +6,7 @@ public enum UserState {
     REGISTER,
     TOKEN_GEN,
     TOKEN_LOGIN,
+    WAITING_TOKEN_RESPONSE,
     AUTHENTICATED,
     NORMAL_QUEUE,
     RANKED_QUEUE,

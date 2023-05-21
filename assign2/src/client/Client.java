@@ -52,6 +52,7 @@ public class Client {
                     case REGISTER, LOGIN -> credentialsMenu();
                     case TOKEN_LOGIN -> tokenLogin();
                     case TOKEN_GEN -> getToken();
+                    case WAITING_TOKEN_RESPONSE -> getTokenResponse();
                     case AUTHENTICATED -> queueSelectMenu();
                     case NORMAL_QUEUE, RANKED_QUEUE -> checkGameStart();
                     case WAITING_QUESTION ->  getQuestion();
@@ -93,10 +94,10 @@ public class Client {
         Scanner scanner = new Scanner(System.in);
         System.out.println("\n------ " + (state == UserState.REGISTER ? "Register" : "Log in") + " ------");
 
-        System.out.println("Username: ");
+        System.out.print("Username: ");
         String username = scanner.nextLine();
 
-        System.out.println("Password: ");
+        System.out.print("Password: ");
         String password = scanner.nextLine();
 
         sendData("?username=" + username + "?password=" + password, socketChannel);
@@ -113,7 +114,7 @@ public class Client {
 
     }
 
-    private void tokenLogin() throws IOException{
+    private void tokenLogin() throws IOException {
 
         Scanner scanner = new Scanner(System.in);
 
@@ -128,14 +129,14 @@ public class Client {
         assert response != null;
         for (String message : response) {
             if(wasOperationSuccessful(message)){
-                state = UserState.AUTHENTICATED;
+                state = UserState.WAITING_TOKEN_RESPONSE;
             }
             System.out.println(message);
         }
 
     }
 
-    private void getToken() throws IOException{
+    private void getToken() throws IOException {
 
         sendData("[TOKEN]", socketChannel);
 
@@ -147,6 +148,19 @@ public class Client {
         }
         state = UserState.AUTHENTICATED;
 
+    }
+
+    private void getTokenResponse() throws IOException {
+        sendData("dummy", socketChannel);
+
+        String[] response = readData(socketChannel);
+
+        assert response != null;
+        for (String message : response) {
+            if(message.startsWith("[QUEUE_SELECT]")) state = UserState.AUTHENTICATED;
+            else if(message.startsWith("[NORMAL]")) state = UserState.NORMAL_QUEUE;
+            else if(message.startsWith("[RANKED]")) state = UserState.RANKED_QUEUE;
+        }
     }
 
     private void queueSelectMenu() throws IOException {

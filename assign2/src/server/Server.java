@@ -182,23 +182,13 @@ public class Server implements GameEndCallback {
                         revokeToken(TOKENS, username);
 
                         User tempClient = getUserFromListByUsername(lostConnectionClients, username);
-
-                        UserState state_aux = getUserQueue(tempClient);
-                        if (state_aux == null) {
-                            assert tempClient != null;
-                            tempClient.state = UserState.AUTHENTICATED;
-                        }
-                        else {
-                            assert tempClient != null;
-                            tempClient.state = state_aux;
-                        }
-
+                        assert tempClient != null;
+                        tempClient.state = UserState.WAITING_TOKEN_RESPONSE;
                         lostConnectionClients.remove(tempClient);
                         connectedClients.put(socketChannel, tempClient);
                         client = tempClient;
                         System.out.println("[SUCCESS] Logged in successfully as " + client.username + " using session token: " + socketChannel.getRemoteAddress());
                         sendData("[SUCCESS] Logged in successfully as " + client.username + " using session token. This token has been revoked.", socketChannel);
-
                     }
                     case TOKEN_GEN -> {
                         UUID uuid = UUID.randomUUID();
@@ -206,6 +196,24 @@ public class Server implements GameEndCallback {
                         storeToken(TOKENS,client.username, uuid.toString());
                         sendData("This is your one time authentication token. Use it in case of a connection loss.\n"+uuid, socketChannel);
                         client.state = UserState.AUTHENTICATED;
+                    }
+                    case WAITING_TOKEN_RESPONSE -> {
+                        UserState state_aux = getUserQueue(client);
+
+                        if(state_aux == null) {
+                            sendData("[QUEUE_SELECT]", socketChannel);
+                        }
+                        else if (state_aux == UserState.NORMAL_QUEUE) {
+                            System.out.println("Client " + client.username + " rejoined normal queue");
+                            sendData("[NORMAL]", socketChannel);
+                            handleNormalQueue();
+                        }
+                        else if (state_aux == UserState.RANKED_QUEUE) {
+                            System.out.println("Client " + client.username + " rejoined ranked queue");
+                            sendData("[RANKED]", socketChannel);
+                        }
+
+                        client.state = Objects.requireNonNullElse(state_aux, UserState.AUTHENTICATED);
                     }
                     case AUTHENTICATED -> {
                         switch (message){
@@ -254,6 +262,10 @@ public class Server implements GameEndCallback {
         client.startQueueTimer();
         System.out.println("Client " + client.username + " joined normal queue");
 
+        handleNormalQueue();
+    }
+
+    private void handleNormalQueue(){
         while(normalQueue.size() >= MAX_PLAYERS){
 
             List<User> gamePlayers = new ArrayList<>();
@@ -369,6 +381,7 @@ public class Server implements GameEndCallback {
         System.out.println("ON: "+ connectedClients.toString());
         System.out.println("DC: "+ lostConnectionClients.toString());
         System.out.println("Normal: " + normalQueue.toString());
+        System.out.println();
         List<User> removeUsersList = new ArrayList<>();
         for (User client : lostConnectionClients){
             if(client.getLossConnectionTime() == MAX_LOSS_CONNECTION_TIME_SECONDS){
@@ -407,22 +420,18 @@ public class Server implements GameEndCallback {
     }
 
     private UserState getUserQueue(User client){
-        Iterator<User> iterator = normalQueue.iterator();
-        while (iterator.hasNext()) {
-            User user = iterator.next();
+
+        for (User user : normalQueue) {
             if (user.username.equals(client.username)) {
                 return UserState.NORMAL_QUEUE;
             }
         }
 
-        Iterator<User> iterator2 = rankedQueue.iterator();
-        while (iterator2.hasNext()) {
-            User user = iterator2.next();
+        for (User user : rankedQueue) {
             if (user.username.equals(client.username)) {
                 return UserState.RANKED_QUEUE;
             }
         }
-
         return null;
     }
 
