@@ -143,11 +143,11 @@ public class Server implements GameEndCallback {
                             return;
                         }
 
-                        putUserInDB(USER_CREDENTIALS, credentials[0], credentials[1], "500");
+                        putUserInDB(USER_CREDENTIALS, credentials[0], credentials[1], String.valueOf(DEFAULT_ELO));
 
                         System.out.println("[SUCCESS] Registered successfully as " + credentials[0] + ": " + socketChannel.getRemoteAddress());
                         sendData("[SUCCESS] Registered successfully as " + credentials[0], socketChannel);
-                        tempClient = new User(credentials[0], 0, UserState.TOKEN_GEN, socketChannel);
+                        tempClient = new User(credentials[0], DEFAULT_ELO, UserState.TOKEN_GEN, socketChannel);
                         connectedClients.replace(socketChannel, client, tempClient);
                         client = tempClient;
                     }
@@ -182,11 +182,22 @@ public class Server implements GameEndCallback {
                         revokeToken(TOKENS, username);
 
                         User tempClient = getUserFromListByUsername(lostConnectionClients, username);
+
+                        UserState state_aux = getUserQueue(tempClient);
+                        if (state_aux == null) {
+                            assert tempClient != null;
+                            tempClient.state = UserState.AUTHENTICATED;
+                        }
+                        else {
+                            assert tempClient != null;
+                            tempClient.state = state_aux;
+                        }
+
                         lostConnectionClients.remove(tempClient);
                         connectedClients.put(socketChannel, tempClient);
-
-                        System.out.println("[SUCCESS] Logged in successfully as " + username + " using session token: " + socketChannel.getRemoteAddress());
-                        sendData("[SUCCESS] Logged in successfully as " + username + " using session token. This token has been revoked.", socketChannel);
+                        client = tempClient;
+                        System.out.println("[SUCCESS] Logged in successfully as " + client.username + " using session token: " + socketChannel.getRemoteAddress());
+                        sendData("[SUCCESS] Logged in successfully as " + client.username + " using session token. This token has been revoked.", socketChannel);
 
                     }
                     case TOKEN_GEN -> {
@@ -250,21 +261,36 @@ public class Server implements GameEndCallback {
             for(int i = 0; i < MAX_PLAYERS; i++){
                 User player = normalQueue.poll();
                 assert player != null;
-                System.out.println(player.username + " removed from normal queue");
-                player.state = UserState.IN_GAME;
 
-                SelectionKey key = player.getChannel().keyFor(selector);
-                if (key.isValid()) {
-                    int ops = key.interestOps();
-                    ops &= ~SelectionKey.OP_READ;
-                    key.interestOps(ops);
+                if (player.state == UserState.LOST_CONNECTION) {
+                    continue;
                 }
                 gamePlayers.add(player);
             }
 
-            Game game = new Game(gamePlayers, GameType.NORMAL, gameNr++);
-            game.setGameEndCallback(this); // 'this' refers to the current Server instance
-            gamePool.execute(game);
+            if(gamePlayers.size() == MAX_PLAYERS) {
+
+                for(User player : gamePlayers){
+                    System.out.println(player.username + " removed from normal queue");
+                    player.state = UserState.IN_GAME;
+
+                    SelectionKey key = player.getChannel().keyFor(selector);
+                    if (key.isValid()) {
+                        int ops = key.interestOps();
+                        ops &= ~SelectionKey.OP_READ;
+                        key.interestOps(ops);
+                    }
+                }
+
+                Game game = new Game(gamePlayers, GameType.NORMAL, gameNr++);
+                game.setGameEndCallback(this); // 'this' refers to the current Server instance
+                gamePool.execute(game);
+            }
+            else{
+                Collections.reverse(gamePlayers);
+                for(User player : gamePlayers)
+                    normalQueue.addFirst(player);
+            }
         }
     }
 
@@ -378,6 +404,26 @@ public class Server implements GameEndCallback {
                 return; // Stop iterating once the user is found and removed
             }
         }
+    }
+
+    private UserState getUserQueue(User client){
+        Iterator<User> iterator = normalQueue.iterator();
+        while (iterator.hasNext()) {
+            User user = iterator.next();
+            if (user.username.equals(client.username)) {
+                return UserState.NORMAL_QUEUE;
+            }
+        }
+
+        Iterator<User> iterator2 = rankedQueue.iterator();
+        while (iterator2.hasNext()) {
+            User user = iterator2.next();
+            if (user.username.equals(client.username)) {
+                return UserState.RANKED_QUEUE;
+            }
+        }
+
+        return null;
     }
 
     @Override

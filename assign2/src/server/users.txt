@@ -1,3 +1,5 @@
 cptappl,bigsur,500
 a,a,500
 s,s,1000
+d,d,500
+f,f,500
