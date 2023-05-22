@@ -47,6 +47,14 @@ Although none were mandatory, we're aware that the developed project has a few l
 - If a game is queued for execution while the game thread pool is full the game will be queued until a free thread is available, but the players are not warned of this in any way.
 - If a player disconnects mid game, the server crashes.
 
+### Class diagrams
+The following class diagrams were generated using IntelliJ's built in [Diagrams plugin](https://www.jetbrains.com/help/idea/class-diagram.html) (Ultimate version exclusive).
+Sadly, there doesn't appear to be an inter-package class diagram generator showing dependencies between packages.
+
+![Client package](imgs/client_package_class_diag.png)
+![Server package](imgs/server_package_class_diag.png)
+![Utils package](imgs/utils_package_class_diag.png)
+
 ## Group members and evaluation:
 
 1. Diogo Babo (up202004950@up.pt) - 25%
