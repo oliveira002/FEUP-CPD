@@ -1,10 +1,8 @@
-# CPD Projects
+# CPD 22/23
 
-CPD Projects of group T04G13.
+## Course Grades
 
-Group members:
+| | Project 1 | Project 2 |
+| --- | --- | --- |
+| Grade | **18.70** | **19.00**| 
 
-1. Diogo Babo (up202004950@up.pt)
-2. Gustavo Costa (up202004187@up.pt)
-3. João Oliveira (up20204407@up.pt)
-4. José Araújo (up202007921@up.pt)
